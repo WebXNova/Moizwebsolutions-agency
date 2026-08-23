@@ -1,0 +1,12 @@
+@import '@/styles/tokens.css';
+@import '@/styles/breakpoints.css';
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+}
