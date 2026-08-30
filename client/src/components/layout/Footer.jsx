@@ -1,13 +1,14 @@
-import { siteConfig } from '@/config/site';
-import { contactConfig } from '@/config/contact';
-import { SocialLinks } from '@/components/navigation/SocialLinks';
+import { ClosingFooter } from '@/components/closing/ClosingFooter';
 
+/**
+ * Compact navy footer for pages that do not use PublicLayout.
+ */
 export function Footer() {
   return (
-    <footer>
-      <p>{siteConfig.name}</p>
-      {contactConfig.email ? <a href={`mailto:${contactConfig.email}`}>{contactConfig.email}</a> : null}
-      <SocialLinks />
-    </footer>
+    <div className="w-full bg-closing-panel">
+      <div className="mx-auto max-w-site px-6 py-14 sm:px-10 sm:py-16 md:px-14 md:py-20 lg:px-16">
+        <ClosingFooter />
+      </div>
+    </div>
   );
 }

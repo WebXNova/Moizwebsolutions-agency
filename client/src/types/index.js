@@ -17,6 +17,7 @@
  * @property {string} id
  * @property {string} title
  * @property {string} description
+ * @property {string} [number]
  * @property {string} [icon]
  */
 
@@ -25,7 +26,57 @@
  * @property {string} id
  * @property {string} name
  * @property {string} [category]
+ * @property {string} [logo]
+ * @property {string} [color]
+ * @property {boolean} [invertOnDark]
+ * @property {number} [width]
+ * @property {number} [height]
  * @property {string} [icon]
+ */
+
+/**
+ * @typedef {Object} ServiceGroup
+ * @property {string} id
+ * @property {string} title
+ * @property {string} description
+ * @property {string} icon
+ * @property {string} [label]
+ * @property {string[]} details
+ */
+
+/**
+ * @typedef {Object} PortfolioProject
+ * @property {string} id
+ * @property {string} title
+ * @property {string} slug
+ * @property {string} categoryId
+ * @property {string} category
+ * @property {string} description
+ * @property {string} technologies
+ * @property {string} imageUrl
+ * @property {string} liveUrl
+ * @property {boolean} featured
+ * @property {number} displayOrder
+ * @property {string} [createdAt]
+ * @property {string} [updatedAt]
+ * @property {string} [previewPosition]
+ * @property {number} [previewScale]
+ */
+
+/**
+ * Client-only crop settings merged onto a project before render.
+ * @typedef {Object} ProjectPreviewSettings
+ * @property {string} src
+ * @property {string} alt
+ * @property {number} [width]
+ * @property {number} [height]
+ * @property {'website' | 'cover'} [mode]
+ * @property {string} [objectPosition]
+ * @property {string} [objectPositionMd]
+ * @property {string} [objectPositionLg]
+ * @property {number} [scale]
+ * @property {string} [shiftY]
+ * @property {number} [parallax]
  */
 
 /**
@@ -37,6 +88,8 @@
  * @property {string} [image]
  * @property {string[]} [tags]
  * @property {string} [year]
+ * @property {string} [category]
+ * @property {boolean} [featured]
  */
 
 /**
@@ -55,6 +108,8 @@
  * @property {number} step
  * @property {string} title
  * @property {string} description
+ * @property {string} [number]
+ * @property {string} [icon]
  */
 
 /**
@@ -62,6 +117,8 @@
  * @property {string} id
  * @property {string} name
  * @property {string} [logo]
+ * @property {number} [width]
+ * @property {number} [height]
  */
 
 export {};

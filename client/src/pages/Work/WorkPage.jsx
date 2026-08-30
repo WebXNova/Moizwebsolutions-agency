@@ -6,17 +6,19 @@ import { projects } from '@/data/projects';
 
 export function WorkPage() {
   return (
-    <>
+    <div className="min-h-screen overflow-x-clip bg-background text-foreground">
       <Header />
       <main>
         <Section id="work-page">
           <Container>
-            <SectionHeading title="All Work" />
-            <ProjectGrid projects={projects} />
+            <SectionHeading eyebrow="Archive" title="All work" />
+            <div className="mt-16 lg:mt-20">
+              <ProjectGrid projects={projects} />
+            </div>
           </Container>
         </Section>
       </main>
       <Footer />
-    </>
+    </div>
   );
 }

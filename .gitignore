@@ -15,6 +15,13 @@ dist-ssr
 !.vscode/extensions.json
 .idea
 
+# Generated email previews (`npm run test:email` in server/)
+.preview
+
 # OS
 .DS_Store
 Thumbs.db
+
+# Server portfolio data
+server/data/
+server/uploads/

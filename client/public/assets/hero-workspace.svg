@@ -1,0 +1,170 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 1200" width="800" height="1200" role="img">
+  <title>Open laptop on a studio desk in front of an office window</title>
+  <style>
+    .grade { mix-blend-mode: overlay; }
+    .grain { mix-blend-mode: overlay; }
+  </style>
+  <defs>
+    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#aab6c2" />
+      <stop offset="1" stop-color="#ccd3d9" />
+    </linearGradient>
+    <linearGradient id="tower" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#8b98a5" />
+      <stop offset="0.55" stop-color="#77848f" />
+      <stop offset="1" stop-color="#5c6873" />
+    </linearGradient>
+    <linearGradient id="desk" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#63452e" />
+      <stop offset="0.28" stop-color="#472f1f" />
+      <stop offset="0.7" stop-color="#2a1b11" />
+      <stop offset="1" stop-color="#160e08" />
+    </linearGradient>
+    <linearGradient id="shell" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#7d848b" />
+      <stop offset="0.28" stop-color="#c3c9cf" />
+      <stop offset="0.72" stop-color="#aeb5bc" />
+      <stop offset="1" stop-color="#71787f" />
+    </linearGradient>
+    <linearGradient id="deck" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#8b9299" />
+      <stop offset="0.4" stop-color="#c8ced4" />
+      <stop offset="1" stop-color="#868d94" />
+    </linearGradient>
+    <linearGradient id="wallpaperSky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#101b2c" />
+      <stop offset="0.42" stop-color="#2c3c53" />
+      <stop offset="0.72" stop-color="#8a6a55" />
+      <stop offset="0.88" stop-color="#c98a51" />
+      <stop offset="1" stop-color="#e0a768" />
+    </linearGradient>
+    <linearGradient id="water" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#9d7448" />
+      <stop offset="0.5" stop-color="#3d3b3c" />
+      <stop offset="1" stop-color="#1b2129" />
+    </linearGradient>
+    <linearGradient id="sheen" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#ffffff" stop-opacity="0.16" />
+      <stop offset="0.42" stop-color="#ffffff" stop-opacity="0.03" />
+      <stop offset="1" stop-color="#ffffff" stop-opacity="0" />
+    </linearGradient>
+    <radialGradient id="spill" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0" stop-color="#6f92b4" stop-opacity="0.5" />
+      <stop offset="1" stop-color="#6f92b4" stop-opacity="0" />
+    </radialGradient>
+    <radialGradient id="vignette" cx="0.5" cy="0.42" r="0.78">
+      <stop offset="0.45" stop-color="#000000" stop-opacity="0" />
+      <stop offset="1" stop-color="#000000" stop-opacity="0.62" />
+    </radialGradient>
+
+    <filter id="soft" x="-12%" y="-12%" width="124%" height="124%">
+      <feGaussianBlur stdDeviation="9" />
+    </filter>
+    <filter id="contact" x="-40%" y="-120%" width="180%" height="340%">
+      <feGaussianBlur stdDeviation="22" />
+    </filter>
+    <filter id="grainFx" x="0" y="0" width="100%" height="100%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="3" stitchTiles="stitch" />
+      <feColorMatrix type="saturate" values="0" />
+    </filter>
+
+    <clipPath id="screenClip">
+      <polygon points="214,396 586,396 598,782 202,782" />
+    </clipPath>
+  </defs>
+
+  <rect width="800" height="1200" fill="#140f0b" />
+
+  <g filter="url(#soft)">
+    <rect x="0" y="0" width="800" height="700" fill="url(#sky)" />
+    <rect x="14" y="26" width="772" height="674" fill="url(#tower)" />
+    <g fill="#4c5865" opacity="0.5">
+      <rect x="60" y="72" width="128" height="88" />
+      <rect x="220" y="72" width="128" height="88" />
+      <rect x="452" y="72" width="128" height="88" />
+      <rect x="612" y="72" width="128" height="88" />
+      <rect x="60" y="196" width="128" height="88" />
+      <rect x="220" y="196" width="128" height="88" />
+      <rect x="452" y="196" width="128" height="88" />
+      <rect x="612" y="196" width="128" height="88" />
+      <rect x="60" y="320" width="128" height="88" />
+      <rect x="220" y="320" width="128" height="88" />
+      <rect x="452" y="320" width="128" height="88" />
+      <rect x="612" y="320" width="128" height="88" />
+      <rect x="60" y="444" width="128" height="88" />
+      <rect x="220" y="444" width="128" height="88" />
+      <rect x="452" y="444" width="128" height="88" />
+      <rect x="612" y="444" width="128" height="88" />
+      <rect x="60" y="568" width="128" height="88" />
+      <rect x="220" y="568" width="128" height="88" />
+      <rect x="452" y="568" width="128" height="88" />
+      <rect x="612" y="568" width="128" height="88" />
+    </g>
+  </g>
+
+  <rect x="0" y="0" width="800" height="700" fill="#14202c" opacity="0.42" />
+  <rect x="0" y="0" width="800" height="200" fill="#0c1219" opacity="0.24" />
+
+  <g fill="#5e574e">
+    <rect x="0" y="0" width="800" height="18" />
+    <rect x="0" y="0" width="16" height="694" />
+    <rect x="784" y="0" width="16" height="694" />
+    <rect x="394" y="0" width="10" height="694" opacity="0.9" />
+  </g>
+  <rect x="0" y="668" width="800" height="26" fill="#6b6055" />
+  <rect x="0" y="690" width="800" height="14" fill="#000000" opacity="0.5" />
+  <rect x="0" y="700" width="800" height="70" fill="#1d1410" />
+
+  <rect x="0" y="752" width="800" height="448" fill="url(#desk)" />
+  <rect x="0" y="750" width="800" height="4" fill="#8f6a48" opacity="0.45" />
+  <g fill="#9c7048" opacity="0.09">
+    <rect x="0" y="800" width="800" height="3" />
+    <rect x="0" y="872" width="800" height="2" />
+    <rect x="0" y="944" width="800" height="3" />
+    <rect x="0" y="1024" width="800" height="2" />
+  </g>
+
+  <ellipse cx="400" cy="884" rx="290" ry="40" fill="#0a0705" opacity="0.7" filter="url(#contact)" />
+
+  <g>
+    <polygon points="192,372 608,372 624,806 176,806" fill="url(#shell)" />
+    <polygon points="204,384 596,384 610,794 190,794" fill="#0a0f15" />
+
+    <g clip-path="url(#screenClip)">
+      <rect x="196" y="390" width="410" height="400" fill="url(#wallpaperSky)" />
+      <polygon points="196,668 300,596 372,646 452,566 540,632 606,600 606,700 196,700" fill="#161d27" opacity="0.92" />
+      <polygon points="196,690 606,690 606,790 196,790" fill="url(#water)" />
+      <circle cx="470" cy="644" r="26" fill="#f0bf82" opacity="0.5" />
+      <rect x="196" y="390" width="410" height="400" fill="url(#sheen)" />
+    </g>
+
+    <polygon points="192,372 608,372 610,382 190,382" fill="#e5e9ec" opacity="0.3" />
+  </g>
+
+  <g>
+    <polygon points="160,806 640,806 702,886 98,886" fill="url(#deck)" />
+    <polygon points="196,816 604,816 638,862 162,862" fill="#9aa1a8" opacity="0.85" />
+    <g fill="#6c737a" opacity="0.6">
+      <rect x="212" y="822" width="376" height="7" />
+      <rect x="206" y="833" width="388" height="7" />
+      <rect x="200" y="844" width="400" height="7" />
+    </g>
+    <polygon points="338,866 462,866 470,880 330,880" fill="#b6bdc4" opacity="0.8" />
+    <polygon points="98,886 702,886 698,904 102,904" fill="#6e757c" />
+    <polygon points="98,904 702,904 700,912 100,912" fill="#000000" opacity="0.45" />
+  </g>
+
+  <ellipse cx="400" cy="944" rx="330" ry="86" fill="url(#spill)" />
+
+  <g>
+    <polygon points="608,912 740,912 772,968 636,968" fill="#0d1218" />
+    <polygon points="620,920 732,920 758,960 648,960" fill="#1a232d" />
+    <polygon points="620,920 732,920 734,927 622,927" fill="#5f7d97" opacity="0.45" />
+  </g>
+
+  <rect x="0" y="1036" width="800" height="6" fill="#7a5636" opacity="0.32" />
+
+  <rect class="grade" width="800" height="1200" fill="#7c4a1c" opacity="0.16" />
+  <rect width="800" height="1200" fill="url(#vignette)" />
+  <rect class="grain" width="800" height="1200" filter="url(#grainFx)" opacity="0.11" />
+</svg>

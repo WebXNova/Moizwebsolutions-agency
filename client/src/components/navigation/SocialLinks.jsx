@@ -1,15 +1,59 @@
-import { socialLinks } from '@/config/social';
+import { socialLinks as fallbackSocial } from '@/config/social';
+import { useSiteContent } from '@/hooks/useSiteContent';
+import { resolveSocialLinks } from '@/lib/contentAdapters';
+import { socialIconMap } from '@/lib/icons';
+import { usePrefersReducedMotion } from '@/hooks/usePrefersReducedMotion';
+import { cn } from '@/lib/cn';
 
-export function SocialLinks() {
+/**
+ * @param {{ className?: string; variant?: 'default' | 'onDark'; animate?: boolean }} props
+ */
+export function SocialLinks({ className, variant = 'default', animate = true }) {
+  const { content } = useSiteContent();
+  const socialLinks = resolveSocialLinks(content?.socialLinks) || fallbackSocial;
+  const reduced = usePrefersReducedMotion();
+
   return (
-    <ul aria-label="Social links">
-      {socialLinks.map((link) => (
-        <li key={link.href}>
-          <a href={link.href} target="_blank" rel="noreferrer">
-            {link.label ?? link.platform}
-          </a>
-        </li>
-      ))}
+    <ul aria-label="Social links" className={cn('flex items-center gap-2', className)}>
+      {socialLinks.map((link, index) => {
+        const Icon = socialIconMap[link.platform];
+
+        return (
+          <li
+            key={link.href}
+            className={cn(animate && !reduced && 'fx-social-enter')}
+            style={animate && !reduced ? { animationDelay: `${180 + index * 70}ms` } : undefined}
+          >
+            <a
+              href={link.href}
+              target="_blank"
+              rel="noreferrer noopener"
+              aria-label={link.label ?? link.platform}
+              className={cn(
+                'group/social flex h-9 w-9 items-center justify-center rounded-full',
+                'transition-[transform,background-color,color,box-shadow] duration-300 ease-out',
+                'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring',
+                'hover-capable:hover:-translate-y-0.5 hover-capable:hover:scale-[1.06]',
+                variant === 'onDark'
+                  ? 'bg-white text-closing-panel hover-capable:hover:bg-brand-yellow hover-capable:hover:text-brand-ink hover-capable:hover:shadow-[0_0_0_1px_rgb(255_194_14_/_0.35)]'
+                  : 'bg-foreground/[0.06] text-muted-foreground hover-capable:hover:bg-foreground/[0.1] hover-capable:hover:text-foreground hover-capable:hover:shadow-[0_0_0_1px_rgb(37_99_235_/_0.2)]',
+              )}
+            >
+              {Icon ? (
+                <Icon
+                  className={cn(
+                    'h-4 w-4 transition-transform duration-300 ease-out',
+                    'group-hover/social:translate-y-[-1px]',
+                    link.platform === 'instagram' && 'group-hover/social:rotate-[-4deg]',
+                    link.platform === 'facebook' && 'group-hover/social:scale-105',
+                    link.platform === 'linkedin' && 'group-hover/social:translate-x-px',
+                  )}
+                />
+              ) : null}
+            </a>
+          </li>
+        );
+      })}
     </ul>
   );
 }

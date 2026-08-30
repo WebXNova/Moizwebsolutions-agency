@@ -3,9 +3,27 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>WebXNova</title>
-    <meta name="description" content="" />
+    <title>Moiz Web Solutions</title>
+    <meta name="description" content="Premium web design and development studio." />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700&family=Inter:wght@300;400;500;600&family=Outfit:wght@200;300;400;500&display=swap"
+      rel="stylesheet"
+    />
+    <script>
+      (function () {
+        var STORAGE_KEY = 'mws-theme';
+        var stored = localStorage.getItem(STORAGE_KEY);
+        var systemDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        var resolved =
+          stored === 'light' ? 'light' : stored === 'dark' ? 'dark' : systemDark ? 'dark' : 'light';
+        if (resolved === 'dark') document.documentElement.classList.add('dark');
+        document.documentElement.dataset.theme = resolved;
+        document.documentElement.style.colorScheme = resolved;
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>

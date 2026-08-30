@@ -1,6 +1,9 @@
 import { useEffect, useState } from 'react';
 
 /**
+ * Tracks a media query, resolved synchronously on the first render so the
+ * initial paint is already correct.
+ *
  * @param {string} query
  * @returns {boolean}
  */

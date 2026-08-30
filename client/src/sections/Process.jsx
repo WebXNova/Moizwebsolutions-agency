@@ -1,13 +1,18 @@
-import { Container, Section, SectionHeading } from '@/components/common';
+import { Container } from '@/components/common/Container';
+import { Section } from '@/components/common/Section';
+import { SectionHeading } from '@/components/common/SectionHeading';
 import { ProcessGrid } from '@/components/process/ProcessGrid';
-import { processSteps } from '@/data/process';
+import { processSteps, processContent } from '@/data/process';
 
 export function Process() {
   return (
-    <Section id="process">
+    <Section id="process" spacing="none" className="pb-24 md:pb-32 lg:pb-[8.5rem]">
       <Container>
-        <SectionHeading title="Process" />
-        <ProcessGrid steps={processSteps} />
+        <SectionHeading eyebrow={processContent.eyebrow} title={processContent.title} />
+
+        <div className="mt-16 lg:mt-20">
+          <ProcessGrid steps={processSteps} />
+        </div>
       </Container>
     </Section>
   );

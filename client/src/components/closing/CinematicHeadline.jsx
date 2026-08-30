@@ -1,0 +1,44 @@
+import { useInViewOnce } from '@/hooks/useInView';
+import { usePrefersReducedMotion } from '@/hooks/usePrefersReducedMotion';
+import { cn } from '@/lib/cn';
+
+const LINES = ['READY TO BUILD', 'SOMETHING', 'EXCEPTIONAL?'];
+
+/**
+ * Editorial serif headline with a clipped, staggered vertical reveal.
+ *
+ * @param {{ id?: string }} [props]
+ */
+export function CinematicHeadline({ id }) {
+  const [ref, inView] = useInViewOnce({ threshold: 0.28, rootMargin: '0px 0px -10% 0px' });
+  const reduced = usePrefersReducedMotion();
+  const reveal = reduced || inView;
+
+  return (
+    <h2
+      id={id}
+      ref={ref}
+      className="font-serif text-[clamp(2.35rem,5.4vw,4.85rem)] font-medium leading-[1.08] tracking-[-0.012em] text-closing-ivory"
+    >
+      {LINES.map((line, index) => (
+        <span key={line} className="block overflow-hidden py-[0.02em]">
+          <span
+            className={cn(
+              'block',
+              reveal && !reduced && 'animate-editorial-reveal',
+              !reveal && !reduced && 'opacity-0',
+            )}
+            style={reveal && !reduced ? { animationDelay: `${index * 110}ms` } : undefined}
+          >
+            <span
+              className={cn('block', reveal && !reduced && 'animate-mask-open')}
+              style={reveal && !reduced ? { animationDelay: `${index * 110}ms` } : undefined}
+            >
+              {line}
+            </span>
+          </span>
+        </span>
+      ))}
+    </h2>
+  );
+}

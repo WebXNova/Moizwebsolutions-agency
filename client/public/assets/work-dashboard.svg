@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 900" width="1200" height="900" role="img">
+  <title>Analytics dashboard interface</title>
+  <rect width="1200" height="900" fill="#0b1723" />
+  <rect x="96" y="112" width="1008" height="676" fill="#101d2b" />
+  <g fill="#f5f5f5" opacity="0.08">
+    <rect x="144" y="164" width="240" height="576" />
+    <rect x="432" y="164" width="304" height="164" />
+    <rect x="768" y="164" width="288" height="164" />
+  </g>
+  <g fill="#dccb91" opacity="0.4">
+    <rect x="176" y="200" width="140" height="10" />
+    <rect x="176" y="232" width="96" height="10" />
+  </g>
+  <polyline points="452,596 552,532 652,564 752,468 852,504 952,412 1036,444" fill="none" stroke="#dccb91" stroke-opacity="0.75" stroke-width="4" />
+  <g fill="#f5f5f5" opacity="0.12">
+    <rect x="452" y="660" width="56" height="80" />
+    <rect x="536" y="620" width="56" height="120" />
+    <rect x="620" y="676" width="56" height="64" />
+    <rect x="704" y="596" width="56" height="144" />
+    <rect x="788" y="644" width="56" height="96" />
+    <rect x="872" y="608" width="56" height="132" />
+    <rect x="956" y="668" width="56" height="72" />
+  </g>
+  <rect x="96" y="112" width="1008" height="676" fill="none" stroke="#f5f5f5" stroke-opacity="0.12" />
+</svg>

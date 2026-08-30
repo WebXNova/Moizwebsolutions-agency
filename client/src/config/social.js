@@ -1,5 +1,6 @@
 /** @type {import('@/types').SocialLink[]} */
 export const socialLinks = [
-  // { platform: 'github', href: 'https://github.com/example', label: 'GitHub' },
-  // { platform: 'linkedin', href: 'https://linkedin.com/in/example', label: 'LinkedIn' },
+  { platform: 'instagram', href: 'https://instagram.com/', label: 'Instagram' },
+  { platform: 'facebook', href: 'https://facebook.com/', label: 'Facebook' },
+  { platform: 'linkedin', href: 'https://linkedin.com/', label: 'LinkedIn' },
 ];
