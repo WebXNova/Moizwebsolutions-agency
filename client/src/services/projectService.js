@@ -9,13 +9,15 @@ export async function getProjects(params = {}) {
   if (params.categoryId) search.set('categoryId', params.categoryId);
   if (params.includeUnpublished) search.set('includeUnpublished', 'true');
   const qs = search.toString();
-  const payload = await apiRequest(`/api/projects${qs ? `?${qs}` : ''}`);
+  const payload = await apiRequest(`/api/projects${qs ? `?${qs}` : ''}`, {
+    auth: Boolean(params.includeUnpublished),
+  });
   return payload.projects;
 }
 
 /** @param {string} id */
 export async function getProject(id) {
-  const payload = await apiRequest(`/api/projects/${id}`);
+  const payload = await apiRequest(`/api/projects/${id}`, { auth: true });
   return payload.project;
 }
 

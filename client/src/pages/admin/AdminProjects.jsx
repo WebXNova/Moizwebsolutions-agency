@@ -155,6 +155,7 @@ export function AdminProjects() {
                     <p className="text-[12px] text-muted-foreground">
                       {project.category}
                       {project.featured ? ' · Featured' : ''}
+                      {project.published === false ? ' · Draft' : ' · Published'}
                       · Order {project.displayOrder}
                     </p>
                     <a

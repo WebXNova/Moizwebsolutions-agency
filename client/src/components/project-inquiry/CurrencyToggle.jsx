@@ -2,13 +2,17 @@ import { currencies } from '@/data/projectInquiry';
 import { cn } from '@/lib/cn';
 
 /**
- * @param {{ value: string; onChange: (currency: string) => void }} props
+ * @param {{
+ *   value: string;
+ *   onChange: (currency: string) => void;
+ *   ariaLabel?: string;
+ * }} props
  */
-export function CurrencyToggle({ value, onChange }) {
+export function CurrencyToggle({ value, onChange, ariaLabel = 'Budget currency' }) {
   return (
     <div
       role="group"
-      aria-label="Budget currency"
+      aria-label={ariaLabel}
       className="inline-flex items-center rounded-full border border-hairline bg-panel-sunken p-0.5"
     >
       {currencies.map((currency) => {

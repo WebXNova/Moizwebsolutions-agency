@@ -5,7 +5,7 @@ import { NewPortfolioCTA } from '@/components/newPortfolio/NewPortfolioCTA';
 import { useProjects } from '@/hooks/useProjects';
 import { useInViewOnce } from '@/hooks/useInView';
 import { usePrefersReducedMotion } from '@/hooks/usePrefersReducedMotion';
-import { SpinnerIcon } from '@/lib/icons';
+import { LoadingBadge } from '@/components/effects/LoadingBadge';
 import { cn } from '@/lib/cn';
 
 /**
@@ -47,7 +47,7 @@ export function NewOurWorks() {
         <div className="mt-16 lg:mt-20">
           {loading ? (
             <div className="flex justify-center py-16" role="status" aria-label="Loading projects">
-              <SpinnerIcon className="h-8 w-8 animate-spin text-muted-foreground" />
+              <LoadingBadge size="sm" label="Loading" />
             </div>
           ) : error ? (
             <p className="text-center text-muted-foreground">{error}</p>

@@ -15,6 +15,10 @@ export default defineConfig({
   },
   // OneDrive placeholders break native file watchers on Windows (lstat UNKNOWN).
   server: {
+    // Bind IPv4 and IPv6. Default `localhost` is [::1] only on this host, so
+    // http://127.0.0.1:5173 (and some Windows localhost resolutions) refused.
+    host: true,
+    port: 5173,
     watch: {
       usePolling: true,
       interval: 1000,
@@ -25,6 +29,8 @@ export default defineConfig({
       '/api': {
         target: 'http://127.0.0.1:8787',
         changeOrigin: true,
+        timeout: 15_000,
+        proxyTimeout: 15_000,
         configure(proxy) {
           proxy.on('error', (_err, req, res) => {
             console.warn(
@@ -56,6 +62,8 @@ export default defineConfig({
       '/uploads': {
         target: 'http://127.0.0.1:8787',
         changeOrigin: true,
+        timeout: 15_000,
+        proxyTimeout: 15_000,
       },
     },
   },

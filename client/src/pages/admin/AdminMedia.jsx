@@ -10,6 +10,7 @@ import {
 import { useToast } from '@/context/ToastProvider';
 import * as cmsService from '@/services/cmsService';
 import { SpinnerIcon } from '@/lib/icons';
+import { apiUrl } from '@/config/api';
 
 export function AdminMedia() {
   const { showToast } = useToast();
@@ -22,6 +23,8 @@ export function AdminMedia() {
   const [deleteId, setDeleteId] = useState(null);
   const [saving, setSaving] = useState(false);
   const [altText, setAltText] = useState('');
+  const [editingAltId, setEditingAltId] = useState(null);
+  const [editingAlt, setEditingAlt] = useState('');
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -75,6 +78,20 @@ export function AdminMedia() {
     }
   };
 
+  const saveAlt = async (id) => {
+    setSaving(true);
+    try {
+      await cmsService.updateMedia(id, { altText: editingAlt });
+      showToast('Alt text saved.');
+      setEditingAltId(null);
+      await load();
+    } catch (err) {
+      showToast(err.message, 'error');
+    } finally {
+      setSaving(false);
+    }
+  };
+
   const copyUrl = async (url) => {
     try {
       await navigator.clipboard.writeText(url);
@@ -120,14 +137,30 @@ export function AdminMedia() {
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
               {media.map((item) => (
                 <div key={item.id} className="rounded-lg border border-border-subtle bg-surface p-3">
-                  <img src={item.url} alt={item.altText || item.filename} className="mb-3 h-32 w-full rounded object-cover" />
+                  <img src={item.url.startsWith('/uploads/') ? apiUrl(item.url) : item.url} alt={item.altText || item.filename} className="mb-3 h-32 w-full rounded object-cover" />
                   <p className="truncate text-[13px] font-medium">{item.filename}</p>
+                  {item.fileMissing ? (
+                    <p className="text-[11px] text-danger">File missing on disk</p>
+                  ) : null}
                   <p className="text-[11px] text-muted-foreground">
                     {(item.sizeBytes / 1024).toFixed(1)} KB · {item.mimeType}
                   </p>
+                  {editingAltId === item.id ? (
+                    <div className="mt-2 flex gap-2">
+                      <input className={inputClass} value={editingAlt} onChange={(e) => setEditingAlt(e.target.value)} />
+                      <button type="button" onClick={() => saveAlt(item.id)} className="rounded-lg border border-border-subtle px-2 py-1 text-[11px]">
+                        Save
+                      </button>
+                    </div>
+                  ) : (
+                    <p className="mt-1 truncate text-[11px] text-muted-foreground">{item.altText || 'No alt text'}</p>
+                  )}
                   <div className="mt-3 flex flex-wrap gap-2">
                     <button type="button" onClick={() => copyUrl(item.url)} className="rounded-lg border border-border-subtle px-2 py-1 text-[11px]">
                       Copy URL
+                    </button>
+                    <button type="button" onClick={() => { setEditingAltId(item.id); setEditingAlt(item.altText || ''); }} className="rounded-lg border border-border-subtle px-2 py-1 text-[11px]">
+                      Alt
                     </button>
                     <button type="button" onClick={() => setDeleteId(item.id)} className="text-[11px] text-danger">
                       Delete

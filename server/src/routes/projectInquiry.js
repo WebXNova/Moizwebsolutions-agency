@@ -1,10 +1,12 @@
 import { Router } from 'express';
 import { collectMailConfigProblems, env } from '../config/env.js';
+import { getDb } from '../db/index.js';
 import { sendMail } from '../email/mailer.js';
 import { renderBusinessInquiryEmail } from '../email/templates/businessInquiry.js';
 import { renderClientConfirmationEmail } from '../email/templates/clientConfirmation.js';
 import { createInquiryId, formatSubmittedAt } from '../inquiry/inquiryId.js';
 import { normalizeInquiry } from '../inquiry/normalizeInquiry.js';
+import { insertInquiry, updateInquiryEmailStatus } from '../inquiry/store.js';
 import { describeError, logger } from '../lib/logger.js';
 import { createRateLimiter } from '../lib/rateLimit.js';
 
@@ -15,6 +17,21 @@ const limiter = createRateLimiter({
 });
 
 export const projectInquiryRouter = Router();
+
+function persistInquiry(db, inquiry, submittedAt) {
+  let inquiryId = createInquiryId(submittedAt, env.mail.timezone);
+  try {
+    insertInquiry(db, { id: inquiryId, inquiry, emailStatus: 'pending', confirmationSent: false });
+    return inquiryId;
+  } catch (error) {
+    if (typeof error?.code === 'string' && error.code.startsWith('SQLITE_CONSTRAINT')) {
+      inquiryId = createInquiryId(submittedAt, env.mail.timezone);
+      insertInquiry(db, { id: inquiryId, inquiry, emailStatus: 'pending', confirmationSent: false });
+      return inquiryId;
+    }
+    throw error;
+  }
+}
 
 projectInquiryRouter.post('/project-inquiry', async (req, res) => {
   const key = req.ip ?? 'unknown';
@@ -53,26 +70,44 @@ projectInquiryRouter.post('/project-inquiry', async (req, res) => {
     });
   }
 
-  const problems = collectMailConfigProblems();
-  if (problems.length > 0) {
-    limiter.refund(key);
-    // Details stay in the server log; the visitor only learns it is unavailable.
-    logger.error('inquiry.mail_unconfigured', { problems });
-    return res.status(503).json({
+  const inquiry = result.data;
+  const submittedAt = new Date();
+  const submittedAtLabel = formatSubmittedAt(submittedAt, env.mail.timezone);
+  const db = getDb();
+
+  let inquiryId;
+  try {
+    inquiryId = persistInquiry(db, inquiry, submittedAt);
+  } catch (error) {
+    logger.error('inquiry.persist_failed', { error: describeError(error) });
+    return res.status(500).json({
       ok: false,
-      code: 'email_unavailable',
-      message: 'Our email service is temporarily unavailable.',
+      code: 'server_error',
+      message: 'We could not save your project brief right now.',
     });
   }
 
-  const inquiry = result.data;
-  const submittedAt = new Date();
-  const inquiryId = createInquiryId(submittedAt, env.mail.timezone);
-  const submittedAtLabel = formatSubmittedAt(submittedAt, env.mail.timezone);
+  logger.info('inquiry.persisted', {
+    inquiryId,
+    services: inquiry.services.length,
+    hasBudget: Boolean(inquiry.budget.rangeLabel),
+    hasTimeline: Boolean(inquiry.timeline),
+  });
+
+  const problems = collectMailConfigProblems();
+  if (problems.length > 0) {
+    logger.error('inquiry.mail_unconfigured', { inquiryId, problems });
+    updateInquiryEmailStatus(db, inquiryId, { emailStatus: 'failed', confirmationSent: false });
+    return res.status(201).json({
+      ok: true,
+      inquiryId,
+      submittedAt: submittedAt.toISOString(),
+      submittedAtLabel,
+      confirmationSent: false,
+    });
+  }
 
   const businessEmail = env.mail.businessEmail;
-  // Guards against the business replying to itself if someone submits the
-  // studio's own address as their contact email.
   const clientIsBusiness = inquiry.client.email.toLowerCase() === businessEmail.toLowerCase();
 
   const businessMessage = renderBusinessInquiryEmail(inquiry, {
@@ -82,42 +117,29 @@ projectInquiryRouter.post('/project-inquiry', async (req, res) => {
     siteUrl: env.mail.siteUrl,
   });
 
+  let emailStatus = 'failed';
   try {
     await sendMail({
       to: businessEmail,
       subject: businessMessage.subject,
       text: businessMessage.text,
       html: businessMessage.html,
-      // Sending identity stays the verified business mailbox; only Reply-To
-      // points at the visitor.
       replyTo: clientIsBusiness
         ? undefined
         : { name: inquiry.client.name, address: inquiry.client.email },
       headers: { 'X-MWS-Inquiry-Id': inquiryId },
     });
+    emailStatus = 'sent';
+    logger.info('inquiry.business_email_sent', { inquiryId });
   } catch (error) {
     logger.error('inquiry.business_email_failed', {
       inquiryId,
       error: describeError(error),
     });
-    return res.status(502).json({
-      ok: false,
-      code: 'send_failed',
-      message: 'We could not deliver your project brief right now.',
-    });
   }
 
-  logger.info('inquiry.business_email_sent', {
-    inquiryId,
-    services: inquiry.services.length,
-    hasBudget: Boolean(inquiry.budget.rangeLabel),
-    hasTimeline: Boolean(inquiry.timeline),
-  });
-
-  // The visitor's receipt is a nice-to-have: a failure here must not turn a
-  // delivered brief into an error on screen.
   let confirmationSent = false;
-  if (env.mail.sendClientConfirmation && !clientIsBusiness) {
+  if (emailStatus === 'sent' && env.mail.sendClientConfirmation && !clientIsBusiness) {
     const confirmation = renderClientConfirmationEmail(inquiry, {
       inquiryId,
       submittedAtLabel,
@@ -143,6 +165,8 @@ projectInquiryRouter.post('/project-inquiry', async (req, res) => {
       });
     }
   }
+
+  updateInquiryEmailStatus(db, inquiryId, { emailStatus, confirmationSent });
 
   return res.status(201).json({
     ok: true,

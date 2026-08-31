@@ -146,6 +146,10 @@ export function AdminUpdates() {
     <>
       <AdminHeader title="Website Updates" breadcrumb="Website" />
       <div className="space-y-6 p-4 sm:p-6 lg:p-8">
+        <p className="text-[13px] text-muted-foreground">
+          Updates are admin-managed and exposed on the public content API for a future site section.
+          They are not rendered on the homepage yet.
+        </p>
         <AdminPanel title={editingId ? 'Edit Update' : 'Add Update'}>
           <form onSubmit={handleSave} className="grid gap-4 md:grid-cols-2">
             <FormField label="Title" required>

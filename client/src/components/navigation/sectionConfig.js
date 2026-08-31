@@ -9,7 +9,7 @@ export const HOME_SECTIONS = [
   { id: 'testimonials', label: 'Testimonials' },
   { id: 'services', label: 'Services' },
   { id: 'technologies', label: 'Technologies' },
-  { id: 'work', label: 'Work' },
+  { id: 'value', label: 'Value' },
   { id: 'process', label: 'Process' },
   { id: 'contact', label: 'Contact' },
 ];

@@ -15,9 +15,12 @@ const LOCKUP_QUERY = '(min-width: 22.5rem)';
  * From 360px upward the full lockup scales by width so the wordmark stays
  * readable without distorting the asset or crowding header controls.
  *
- * @param {{ className?: string; compact?: boolean }} props
+ * `navTarget` marks the header instance as the boot-loader flight destination.
+ * Footer and mobile-menu copies must not set this.
+ *
+ * @param {{ className?: string; compact?: boolean; navTarget?: boolean }} props
  */
-export function Logo({ className, compact = false }) {
+export function Logo({ className, compact = false, navTarget = false }) {
   const showLockup = useMediaQuery(LOCKUP_QUERY);
   const source = showLockup ? lockup : monogram;
 
@@ -38,6 +41,8 @@ export function Logo({ className, compact = false }) {
         alt=""
         fetchPriority="high"
         decoding="async"
+        data-brand-mark={showLockup ? 'lockup' : 'monogram'}
+        {...(navTarget ? { 'data-nav-logo': '' } : {})}
         className={cn(
           'logo-mark h-auto w-auto max-w-full object-contain object-left',
           showLockup

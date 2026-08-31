@@ -25,7 +25,7 @@ export function Technologies() {
             <TechnologiesHeader title={technologiesContent.title} />
           </div>
 
-          <div className="overflow-hidden pb-10 pt-2 md:pb-12">
+          <div className="overflow-hidden pb-10 pt-1 md:pb-14">
             <TechnologyList technologies={technologies} revealed={revealed} />
           </div>
         </div>

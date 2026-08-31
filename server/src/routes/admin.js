@@ -38,6 +38,21 @@ adminRouter.get('/dashboard', (_req, res) => {
     .get().count;
   const totalMedia = db.prepare('SELECT COUNT(*) AS count FROM media').get().count;
 
+  const totalInquiries = db.prepare('SELECT COUNT(*) AS count FROM inquiries').get().count;
+  const newInquiries = db
+    .prepare("SELECT COUNT(*) AS count FROM inquiries WHERE status = 'new'")
+    .get().count;
+  const inquiriesToday = db
+    .prepare("SELECT COUNT(*) AS count FROM inquiries WHERE created_at >= datetime('now', 'start of day')")
+    .get().count;
+  const inquiriesThisWeek = db
+    .prepare("SELECT COUNT(*) AS count FROM inquiries WHERE created_at >= datetime('now', '-7 days')")
+    .get().count;
+  const inquiryStatusRows = db
+    .prepare('SELECT status, COUNT(*) AS count FROM inquiries GROUP BY status')
+    .all();
+  const inquiryStatus = Object.fromEntries(inquiryStatusRows.map((row) => [row.status, row.count]));
+
   const missingLiveUrls = db
     .prepare("SELECT COUNT(*) AS count FROM projects WHERE live_url = '' OR live_url IS NULL")
     .get().count;
@@ -96,6 +111,11 @@ adminRouter.get('/dashboard', (_req, res) => {
       publishedUpdates,
       draftUpdates,
       totalMedia,
+      totalInquiries,
+      newInquiries,
+      inquiriesToday,
+      inquiriesThisWeek,
+      inquiryStatus,
     },
     health: {
       missingLiveUrls,

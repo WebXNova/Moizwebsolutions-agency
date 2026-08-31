@@ -9,14 +9,26 @@ export function AuthProvider({ children }) {
 
   useEffect(() => {
     let active = true;
-    authService.getCurrentAdmin().then((user) => {
-      if (active) {
-        setAdmin(user);
-        setLoading(false);
-      }
-    });
+    const failsafe = window.setTimeout(() => {
+      if (active) setLoading(false);
+    }, 8_000);
+
+    authService
+      .getCurrentAdmin()
+      .then((user) => {
+        if (active) setAdmin(user);
+      })
+      .catch(() => {
+        if (active) setAdmin(null);
+      })
+      .finally(() => {
+        window.clearTimeout(failsafe);
+        if (active) setLoading(false);
+      });
+
     return () => {
       active = false;
+      window.clearTimeout(failsafe);
     };
   }, []);
 
@@ -45,7 +57,7 @@ export function AuthProvider({ children }) {
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
 
-/** @returns {{ admin: { id: string; email: string } | null; loading: boolean; isAuthenticated: boolean; login: (email: string, password: string) => Promise<unknown>; logout: () => void }} */
+/** @returns {{ admin: { id: string; email: string; name?: string; role?: string; active?: boolean } | null; loading: boolean; isAuthenticated: boolean; login: (email: string, password: string) => Promise<unknown>; logout: () => void }} */
 export function useAuth() {
   const ctx = useContext(AuthContext);
   if (!ctx) throw new Error('useAuth must be used within AuthProvider');

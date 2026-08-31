@@ -184,9 +184,9 @@ export const defaultProcessSteps = [
 ];
 
 export const defaultSocialLinks = [
-  { platform: 'facebook', href: 'https://facebook.com/', label: 'Facebook', icon: 'facebook', active: true, displayOrder: 1 },
-  { platform: 'instagram', href: 'https://instagram.com/', label: 'Instagram', icon: 'instagram', active: true, displayOrder: 2 },
-  { platform: 'linkedin', href: 'https://linkedin.com/', label: 'LinkedIn', icon: 'linkedin', active: true, displayOrder: 3 },
+  { platform: 'facebook', href: 'https://www.facebook.com/moizwebsolutions/?__pwa=1', label: 'Facebook', icon: 'facebook', active: true, displayOrder: 1 },
+  { platform: 'instagram', href: 'https://www.instagram.com/moizwebsolutions/?__pwa=1', label: 'Instagram', icon: 'instagram', active: true, displayOrder: 2 },
+  { platform: 'linkedin', href: 'https://www.linkedin.com/in/moiz-web-solutions-644b66431', label: 'LinkedIn', icon: 'linkedin', active: true, displayOrder: 3 },
 ];
 
 export const defaultSiteSettings = {

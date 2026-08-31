@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { randomUUID } from 'node:crypto';
 import { getDb } from '../db/index.js';
-import { requireAuth } from '../middleware/auth.js';
+import { requireAuth, requireWrite } from '../middleware/auth.js';
 import { slugify } from '../lib/slug.js';
 import { asString } from '../lib/validators.js';
 
@@ -36,7 +36,7 @@ categoriesRouter.get('/', (_req, res) => {
   return res.json({ ok: true, categories: rows.map(formatCategory) });
 });
 
-categoriesRouter.post('/', requireAuth, (req, res) => {
+categoriesRouter.post('/', requireAuth, requireWrite, (req, res) => {
   const name = asString(req.body?.name);
   if (!name) {
     return res.status(400).json({
@@ -65,7 +65,7 @@ categoriesRouter.post('/', requireAuth, (req, res) => {
   return res.status(201).json({ ok: true, category: formatCategory({ ...row, project_count: 0 }) });
 });
 
-categoriesRouter.put('/:id', requireAuth, (req, res) => {
+categoriesRouter.put('/:id', requireAuth, requireWrite, (req, res) => {
   const name = asString(req.body?.name);
   if (!name) {
     return res.status(400).json({
@@ -105,7 +105,7 @@ categoriesRouter.put('/:id', requireAuth, (req, res) => {
   return res.json({ ok: true, category: formatCategory({ ...row, project_count: count }) });
 });
 
-categoriesRouter.delete('/:id', requireAuth, (req, res) => {
+categoriesRouter.delete('/:id', requireAuth, requireWrite, (req, res) => {
   const db = getDb();
   const existing = db.prepare('SELECT * FROM categories WHERE id = ?').get(req.params.id);
   if (!existing) {

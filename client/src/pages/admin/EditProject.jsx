@@ -24,8 +24,15 @@ export function EditProject() {
           technologies: project.technologies,
           liveUrl: project.liveUrl,
           imageUrl: project.imageUrl,
-          featured: project.featured,
-          displayOrder: project.displayOrder,
+          featured: Boolean(project.featured),
+          published: Boolean(project.published),
+          displayOrder: project.displayOrder ?? 0,
+          client: project.client ?? '',
+          year: project.year ?? '',
+          githubUrl: project.githubUrl ?? '',
+          seoTitle: project.seoTitle ?? '',
+          seoDescription: project.seoDescription ?? '',
+          previewObjectPosition: project.previewObjectPosition ?? 'center',
         }),
       )
       .catch((err) => setError(err.message))

@@ -80,6 +80,11 @@ export function NewProjectCard({ project, index = 0 }) {
         <div className="flex items-end justify-between gap-4 px-4 pb-5 pt-5">
           <div className="min-w-0">
             <h4 className="text-[14px] font-semibold text-foreground">{metaTitle}</h4>
+            {[project.client, project.year].filter(Boolean).length > 0 ? (
+              <p className="mt-1 text-[11px] uppercase tracking-[0.16em] text-muted-foreground">
+                {[project.client, project.year].filter(Boolean).join(' · ')}
+              </p>
+            ) : null}
             <p className="mt-1.5 line-clamp-2 text-[13px] leading-relaxed text-muted-foreground">
               {project.description}
             </p>
@@ -95,6 +100,16 @@ export function NewProjectCard({ project, index = 0 }) {
               >
                 Live Preview
               </a>
+              {project.githubUrl ? (
+                <a
+                  href={project.githubUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="fx-nav-link text-[11px] font-medium text-muted-foreground hover:text-foreground"
+                >
+                  GitHub
+                </a>
+              ) : null}
               <a
                 href={liveUrl}
                 target="_blank"

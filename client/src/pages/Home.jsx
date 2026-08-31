@@ -3,7 +3,7 @@ import { TrustedCompanies } from '@/sections/TrustedCompanies';
 import { Testimonials } from '@/sections/Testimonials';
 import { Services } from '@/sections/Services';
 import { Technologies } from '@/sections/Technologies';
-import { Work } from '@/sections/Work';
+import { FeatureHighlights } from '@/sections/FeatureHighlights';
 import { NewOurWorks } from '@/components/newPortfolio/NewOurWorks';
 
 export function Home() {
@@ -15,7 +15,7 @@ export function Home() {
       <Testimonials />
       <Services />
       <Technologies />
-      <Work />
+      <FeatureHighlights />
     </main>
   );
 }

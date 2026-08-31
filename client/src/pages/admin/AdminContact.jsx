@@ -288,7 +288,7 @@ export function AdminContact() {
           </div>
         </AdminPanel>
 
-        <AdminPanel title="Navigation Items">
+        <AdminPanel title="Navigation Items" description="System-managed site links. Items can be edited or hidden; they cannot be created or deleted.">
           <div className="space-y-3">
             {navigation.map((item) => (
               <div key={item.id} className="rounded-lg border border-border-subtle p-3">

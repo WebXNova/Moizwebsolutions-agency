@@ -5,8 +5,9 @@ import { ThemeToggle } from '@/components/common/ThemeToggle';
 import { Logo } from '@/components/navigation/Logo';
 import { LogoIntro } from '@/components/navigation/LogoIntro';
 import { SocialLinks } from '@/components/navigation/SocialLinks';
+import { FriesMenuIcon } from '@/components/navigation/FriesMenuIcon';
 import { MobileMenu } from '@/components/layout/MobileMenu';
-import { MenuIcon } from '@/lib/icons';
+import { cn } from '@/lib/cn';
 
 export function Header() {
   const [menuOpen, setMenuOpen] = useState(false);
@@ -20,7 +21,7 @@ export function Header() {
       <Container>
         <div className="flex items-center justify-between gap-4 py-4 sm:gap-5 sm:py-5 md:py-6">
           <LogoIntro className="min-w-0 max-w-[58%] min-[375px]:max-w-[62%] sm:max-w-none">
-            <Logo />
+            <Logo navTarget />
           </LogoIntro>
 
           <div className="hidden shrink-0 items-center gap-5 lg:flex xl:gap-6">
@@ -31,14 +32,18 @@ export function Header() {
           <div className="flex shrink-0 items-center gap-1.5 sm:gap-2 lg:hidden">
             <ThemeToggle />
             <IconButton
-              className="-mr-2"
-              label="Open menu"
+              className={cn(
+                'h-11 w-11 -mr-1.5 text-foreground',
+                'hover-capable:hover:text-brand-blue',
+                menuOpen && 'text-brand-blue',
+              )}
+              label={menuOpen ? 'Close menu' : 'Open menu'}
               aria-controls="mobile-navigation"
               aria-expanded={menuOpen}
               aria-haspopup="dialog"
-              onClick={() => setMenuOpen(true)}
+              onClick={() => setMenuOpen((open) => !open)}
             >
-              <MenuIcon className="h-5 w-5" />
+              <FriesMenuIcon open={menuOpen} />
             </IconButton>
           </div>
         </div>

@@ -189,7 +189,7 @@ export function AdminCtaProcess() {
           </button>
         </AdminPanel>
 
-        <AdminPanel title="Hero CTA" description="Secondary CTA block settings.">
+        <AdminPanel title="Hero CTA" description="Stored CMS block. Not currently rendered on the public homepage — the live hero uses Hero settings instead.">
           <div className="grid gap-4 md:grid-cols-2">
             <FormField label="Heading">
               <input className={inputClass} value={heroCta.heading || ''} onChange={(e) => setHeroCta((p) => ({ ...p, heading: e.target.value }))} />

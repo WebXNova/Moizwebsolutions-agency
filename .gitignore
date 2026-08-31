@@ -25,3 +25,8 @@ Thumbs.db
 # Server portfolio data
 server/data/
 server/uploads/
+server/backups/
+
+# Logs
+logs/
+*.log

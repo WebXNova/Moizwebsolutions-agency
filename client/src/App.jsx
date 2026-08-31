@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { Home } from '@/pages/Home';
 import { PortfolioPage } from '@/pages/Portfolio';
 import { ContactPage } from '@/pages/Contact';
@@ -23,11 +23,21 @@ import { AdminContact } from '@/pages/admin/AdminContact';
 import { AdminSeo } from '@/pages/admin/AdminSeo';
 import { AdminMedia } from '@/pages/admin/AdminMedia';
 import { AdminActivityLogs } from '@/pages/admin/AdminActivityLogs';
+import { AdminInquiries } from '@/pages/admin/AdminInquiries';
 import { AdminUsers } from '@/pages/admin/AdminUsers';
+import { useAppReveal } from '@/hooks/useAppReveal';
+
+/** Reveals the HTML boot loader for admin routes (no public CMS wait). */
+function BootRouteGate() {
+  const { pathname } = useLocation();
+  useAppReveal(pathname.startsWith('/admin'));
+  return null;
+}
 
 export default function App() {
   return (
     <BrowserRouter>
+      <BootRouteGate />
       <Routes>
         <Route element={<PublicLayout />}>
           <Route path="/" element={<Home />} />
@@ -54,6 +64,7 @@ export default function App() {
           <Route path="technologies" element={<AdminTechnologies />} />
           <Route path="cta-process" element={<AdminCtaProcess />} />
           <Route path="updates" element={<AdminUpdates />} />
+          <Route path="inquiries" element={<AdminInquiries />} />
           <Route path="contact" element={<AdminContact />} />
           <Route path="seo" element={<AdminSeo />} />
           <Route path="media" element={<AdminMedia />} />

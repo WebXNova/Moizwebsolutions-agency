@@ -6,6 +6,7 @@ import {
   StatusBadge,
   inputClass,
 } from '@/components/admin/cms/AdminForm';
+import { useAuth } from '@/context/AuthProvider';
 import { useToast } from '@/context/ToastProvider';
 import * as cmsService from '@/services/cmsService';
 import { SpinnerIcon } from '@/lib/icons';
@@ -27,6 +28,8 @@ const emptyEdit = {
 };
 
 export function AdminUsers() {
+  const { admin } = useAuth();
+  const canManageUsers = admin?.role === 'super_admin';
   const { showToast } = useToast();
   const [users, setUsers] = useState([]);
   const [createForm, setCreateForm] = useState(emptyCreate);
@@ -36,10 +39,15 @@ export function AdminUsers() {
   const [saving, setSaving] = useState(false);
 
   const load = useCallback(async () => {
+    if (!canManageUsers) {
+      setUsers([]);
+      setLoading(false);
+      return;
+    }
     const data = await cmsService.getAdminUsers();
     setUsers(data);
     setLoading(false);
-  }, []);
+  }, [canManageUsers]);
 
   useEffect(() => {
     load().catch((e) => showToast(e.message, 'error'));
@@ -107,6 +115,7 @@ export function AdminUsers() {
     <>
       <AdminHeader title="Admin Users" breadcrumb="Admin" />
       <div className="space-y-6 p-4 sm:p-6 lg:p-8">
+        {canManageUsers ? (
         <AdminPanel title="Create User">
           <form onSubmit={handleCreate} className="grid gap-4 md:grid-cols-2">
             <FormField label="Email" required>
@@ -132,7 +141,13 @@ export function AdminUsers() {
             </div>
           </form>
         </AdminPanel>
+        ) : (
+          <p className="text-[13px] text-muted-foreground">
+            Only a super admin can view, create, or edit admin users.
+          </p>
+        )}
 
+        {canManageUsers ? (
         <AdminPanel title="All Users">
           <div className="space-y-3">
             {users.map((user) => (
@@ -175,15 +190,18 @@ export function AdminUsers() {
                         <span className="text-[11px] uppercase tracking-wide text-muted-foreground">{user.role.replace(/_/g, ' ')}</span>
                       </div>
                     </div>
+                    {canManageUsers ? (
                     <button type="button" onClick={() => handleEdit(user)} className="text-[12px] text-muted-foreground hover:text-foreground">
                       Edit
                     </button>
+                    ) : null}
                   </div>
                 )}
               </div>
             ))}
           </div>
         </AdminPanel>
+        ) : null}
       </div>
     </>
   );

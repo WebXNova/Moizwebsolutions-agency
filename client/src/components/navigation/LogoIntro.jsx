@@ -2,16 +2,14 @@ import { useIntroAnimation } from '@/hooks/useIntroAnimation';
 import { cn } from '@/lib/cn';
 
 /**
- * Plays the brand entrance around whatever it wraps, once per page load.
+ * Header wrapper for the brand mark.
  *
- * Two layers because the settle and the reveal need independent timelines: the
- * outer lifts and fades the mark in, the inner uncovers it left to right,
- * echoing the sweep of the swoosh through the monogram and arriving at the
- * wordmark last. `origin-left` pins the left edge so the header never appears
- * to slide.
+ * First-load entrance is owned by the HTML boot flight (center → navbar).
+ * This wrapper stays a layout pin so the header never shifts when the traveler
+ * hands off to the real logo. CSS intro classes still exist if `useIntroAnimation`
+ * is re-enabled later.
  *
- * Both classes come off once the reveal ends, which drops the lingering
- * `clip-path` container. Left in place it would clip the link's focus ring.
+ * `origin-left` pins the left edge so the header never appears to slide.
  *
  * @param {{ children: import('react').ReactNode; className?: string }} props
  */

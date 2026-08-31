@@ -2,8 +2,12 @@ import { Outlet } from 'react-router-dom';
 import { Header } from '@/components/layout/Header';
 import { SidebarLine } from '@/components/navigation/SidebarLine';
 import { ClosingBand } from '@/components/closing/ClosingBand';
+import { DocumentSeo } from '@/components/layout/DocumentSeo';
+import { UpdatesBanner } from '@/components/layout/UpdatesBanner';
 import { InquiryProvider } from '@/context/InquiryProvider';
 import { SiteContentProvider } from '@/hooks/useSiteContent';
+import { usePublicLoading } from '@/hooks/usePublicLoading';
+import { useAppReveal } from '@/hooks/useAppReveal';
 import { PageTransition } from '@/components/motion/PageTransition';
 import { ScrollProgress } from '@/components/effects/ScrollProgress';
 import { FilmGrain } from '@/components/effects/FilmGrain';
@@ -19,20 +23,32 @@ export function PublicLayout() {
   return (
     <SiteContentProvider>
       <InquiryProvider>
-      <PageTransition>
-        <ScrollProgress />
-        <SidebarLine />
-        <ColorGrade />
-        <AmbientGlow />
-        <FilmGrain />
-        <CustomCursor />
-        <div className="relative z-[2] min-h-screen overflow-x-clip bg-background text-foreground">
-          <Header />
-          <Outlet />
-          <ClosingBand />
-        </div>
-      </PageTransition>
+        <PublicShell />
       </InquiryProvider>
     </SiteContentProvider>
+  );
+}
+
+function PublicShell() {
+  const loading = usePublicLoading();
+  // Reveal only when CMS content has settled (+ minimum boot duration).
+  useAppReveal(!loading);
+
+  return (
+    <PageTransition>
+      <ScrollProgress />
+      <SidebarLine />
+      <ColorGrade />
+      <AmbientGlow />
+      <FilmGrain />
+      <CustomCursor />
+      <div data-site-shell className="relative z-[2] min-h-screen overflow-x-clip bg-background text-foreground">
+        <DocumentSeo />
+        <Header />
+        <UpdatesBanner />
+        <Outlet />
+        <ClosingBand />
+      </div>
+    </PageTransition>
   );
 }

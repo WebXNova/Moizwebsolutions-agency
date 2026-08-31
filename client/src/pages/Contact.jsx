@@ -3,10 +3,13 @@ import { Section } from '@/components/common/Section';
 import { MagneticCta } from '@/components/closing/MagneticCta';
 import { SplitLine } from '@/components/effects/SplitLine';
 import { useInquiry } from '@/context/InquiryProvider';
-import { finalCtaContent } from '@/config/contact';
+import { useSiteContent } from '@/hooks/useSiteContent';
+import { resolveFinalCta } from '@/lib/contentAdapters';
 
 export function ContactPage() {
   const { open } = useInquiry();
+  const { content } = useSiteContent();
+  const ctaContent = resolveFinalCta(content?.cta);
 
   return (
     <main>
@@ -21,9 +24,9 @@ export function ContactPage() {
             </div>
             <div className="flex flex-col items-start gap-7 lg:col-span-4 lg:col-start-9">
               <p className="max-w-[22rem] text-body leading-[1.85] text-muted-foreground">
-                {finalCtaContent.subtitle}
+                {ctaContent.subtitle}
               </p>
-              <MagneticCta onClick={open}>{finalCtaContent.cta.label}</MagneticCta>
+              <MagneticCta onClick={open}>{ctaContent.cta.label}</MagneticCta>
             </div>
           </div>
         </Container>

@@ -31,11 +31,17 @@ export function StatusBadge({ status, className }) {
     <span
       className={cn(
         'inline-flex rounded-full px-2 py-0.5 text-[11px] font-medium uppercase tracking-wide',
-        normalized === 'published' || normalized === 'active' ? 'bg-brand-navy/10 text-brand-navy' : '',
-        normalized === 'draft' ? 'bg-surface-muted text-muted-foreground' : '',
-        normalized === 'featured' ? 'bg-brand-yellow/20 text-brand-ink' : '',
-        normalized === 'scheduled' ? 'bg-brand-blue/10 text-brand-blue' : '',
-        normalized === 'expired' || normalized === 'inactive' ? 'bg-danger/10 text-danger' : '',
+        normalized === 'published' || normalized === 'active' || normalized === 'new' || normalized === 'sent'
+          ? 'bg-brand-navy/10 text-brand-navy'
+          : '',
+        normalized === 'draft' || normalized === 'pending' || normalized === 'archived' ? 'bg-surface-muted text-muted-foreground' : '',
+        normalized === 'featured' || normalized === 'won' ? 'bg-brand-yellow/20 text-brand-ink' : '',
+        normalized === 'scheduled' || normalized === 'contacted' || normalized === 'qualified' || normalized === 'proposal'
+          ? 'bg-brand-blue/10 text-brand-blue'
+          : '',
+        normalized === 'expired' || normalized === 'inactive' || normalized === 'lost' || normalized === 'failed'
+          ? 'bg-danger/10 text-danger'
+          : '',
         className,
       )}
     >

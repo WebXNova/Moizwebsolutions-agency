@@ -143,6 +143,28 @@ export function initializeCmsSchema(db) {
       created_at TEXT NOT NULL DEFAULT (datetime('now'))
     );
 
+    CREATE TABLE IF NOT EXISTS inquiries (
+      id TEXT PRIMARY KEY,
+      name TEXT NOT NULL,
+      email TEXT NOT NULL,
+      phone TEXT NOT NULL DEFAULT '',
+      business TEXT NOT NULL DEFAULT '',
+      website TEXT NOT NULL DEFAULT '',
+      social TEXT NOT NULL DEFAULT '',
+      services_json TEXT NOT NULL DEFAULT '[]',
+      project_types_json TEXT NOT NULL DEFAULT '[]',
+      description TEXT NOT NULL DEFAULT '',
+      budget_currency TEXT NOT NULL DEFAULT '',
+      budget_label TEXT NOT NULL DEFAULT '',
+      timeline TEXT NOT NULL DEFAULT '',
+      status TEXT NOT NULL DEFAULT 'new',
+      email_status TEXT NOT NULL DEFAULT 'pending',
+      confirmation_sent INTEGER NOT NULL DEFAULT 0,
+      notes TEXT NOT NULL DEFAULT '',
+      created_at TEXT NOT NULL DEFAULT (datetime('now')),
+      updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+    );
+
     CREATE INDEX IF NOT EXISTS idx_services_order ON services(display_order);
     CREATE INDEX IF NOT EXISTS idx_testimonials_order ON testimonials(display_order);
     CREATE INDEX IF NOT EXISTS idx_trusted_companies_order ON trusted_companies(display_order);
@@ -150,7 +172,12 @@ export function initializeCmsSchema(db) {
     CREATE INDEX IF NOT EXISTS idx_process_steps_order ON process_steps(display_order);
     CREATE INDEX IF NOT EXISTS idx_website_updates_order ON website_updates(display_order);
     CREATE INDEX IF NOT EXISTS idx_activity_logs_created ON activity_logs(created_at);
+    CREATE INDEX IF NOT EXISTS idx_activity_logs_action ON activity_logs(action);
+    CREATE INDEX IF NOT EXISTS idx_activity_logs_resource ON activity_logs(resource_type);
     CREATE INDEX IF NOT EXISTS idx_media_created ON media(created_at);
+    CREATE INDEX IF NOT EXISTS idx_inquiries_created ON inquiries(created_at);
+    CREATE INDEX IF NOT EXISTS idx_inquiries_status ON inquiries(status);
+    CREATE INDEX IF NOT EXISTS idx_inquiries_email ON inquiries(email);
   `);
 
   migrateProjectColumns(db);

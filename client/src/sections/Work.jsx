@@ -3,7 +3,7 @@ import { Section } from '@/components/common/Section';
 import { ProjectGrid } from '@/components/projects/ProjectGrid';
 import { ExploreAllCTA } from '@/components/projects/ExploreAllCTA';
 import { useProjects } from '@/hooks/useProjects';
-import { SpinnerIcon } from '@/lib/icons';
+import { LoadingBadge } from '@/components/effects/LoadingBadge';
 
 export function Work() {
   const { projects, loading, error } = useProjects({ featured: true });
@@ -24,7 +24,7 @@ export function Work() {
         <div className="mt-16 lg:mt-20">
           {loading ? (
             <div className="flex justify-center py-16" role="status" aria-label="Loading projects">
-              <SpinnerIcon className="h-8 w-8 animate-spin text-muted-foreground" />
+              <LoadingBadge size="sm" label="Loading" />
             </div>
           ) : error ? (
             <p className="text-center text-muted-foreground">{error}</p>

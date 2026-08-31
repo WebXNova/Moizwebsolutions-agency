@@ -54,6 +54,16 @@ export async function apiRequest(path, options = {}) {
       : null;
 
     if (!response.ok || payload?.ok === false) {
+      if (auth && response.status === 401) {
+        clearAuthToken();
+        if (
+          typeof window !== 'undefined' &&
+          window.location.pathname.startsWith('/admin') &&
+          !window.location.pathname.startsWith('/admin/login')
+        ) {
+          window.location.assign('/admin/login');
+        }
+      }
       const error = new Error(payload?.message || 'Request failed.');
       error.code = payload?.code || 'request_failed';
       error.status = response.status;
@@ -62,6 +72,24 @@ export async function apiRequest(path, options = {}) {
     }
 
     return payload;
+  } catch (error) {
+    if (error?.name === 'AbortError' || error?.name === 'TimeoutError') {
+      const timeout = new Error(
+        'The API did not respond. From the client folder, start it with npm run dev:api.',
+      );
+      timeout.code = 'api_unavailable';
+      timeout.status = 503;
+      throw timeout;
+    }
+    if (error?.code === 'ECONNREFUSED' || error?.message === 'Failed to fetch') {
+      const unavailable = new Error(
+        'The API server is not running. From the client folder, start it with npm run dev:api.',
+      );
+      unavailable.code = 'api_unavailable';
+      unavailable.status = 503;
+      throw unavailable;
+    }
+    throw error;
   } finally {
     clearTimeout(timer);
   }

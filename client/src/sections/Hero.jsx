@@ -28,11 +28,12 @@ export function Hero() {
     >
       <Container>
         <div className="grid grid-cols-1 items-center gap-10 md:grid-cols-[minmax(0,1.05fr)_minmax(0,0.95fr)] md:items-start md:gap-10 lg:gap-14 xl:gap-16">
-          <div ref={contentRef} className="will-change-transform md:max-w-[36rem] lg:max-w-[38rem]">
+          <div ref={contentRef} className="will-change-transform md:max-w-[38rem] lg:max-w-[42rem]">
             <HeroContent
               titleLines={heroContent.titleLines}
               paragraph={heroContent.paragraph}
               cta={heroContent.cta}
+              secondaryCta={heroContent.secondaryCta}
               onCtaClick={open}
             />
 

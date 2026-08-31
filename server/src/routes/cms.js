@@ -1,12 +1,25 @@
 import { Router } from 'express';
 import { randomUUID } from 'node:crypto';
+import fs from 'node:fs';
 import bcrypt from 'bcryptjs';
 import { getDb } from '../db/index.js';
-import { requireAuth } from '../middleware/auth.js';
+import { ADMIN_ROLES, requireAuth, requireUserAdmin, requireWrite } from '../middleware/auth.js';
 import { getAllSettings, getSetting, setSetting } from '../cms/seed.js';
 import { logActivity, getClientIp } from '../cms/activity.js';
+import { applyReorder } from '../cms/reorder.js';
+import { validateSetting } from '../cms/settingsValidation.js';
 import { slugify } from '../lib/slug.js';
-import { asBool, asInt, asString, isValidUrl, normalizeUrl } from '../lib/validators.js';
+import { deleteManagedUpload, resolveManagedUploadPath } from '../lib/uploads.js';
+import {
+  asBool,
+  asDate,
+  asInt,
+  asString,
+  isValidEmail,
+  isValidUrl,
+  normalizeEmail,
+  normalizeUrl,
+} from '../lib/validators.js';
 import {
   formatActivityLog,
   formatMedia,
@@ -22,6 +35,10 @@ import {
 
 export const cmsRouter = Router();
 cmsRouter.use(requireAuth);
+cmsRouter.use((req, res, next) => {
+  if (req.method === 'GET' || req.method === 'HEAD') return next();
+  return requireWrite(req, res, next);
+});
 
 const SERVICE_ICONS = ['design', 'development', 'marketing', 'graphic'];
 const PROCESS_ICONS = ['discovery', 'iterate', 'agile', 'launch'];
@@ -37,6 +54,47 @@ function audit(req, action, resourceType, resourceId, details = '') {
   });
 }
 
+/**
+ * @param {import('express').Request} req
+ * @param {import('express').Response} res
+ * @param {{ table: string; resourceLabel: string; action: string; resourceType: string }} spec
+ */
+function handleReorder(req, res, spec) {
+  const result = applyReorder(getDb(), {
+    table: spec.table,
+    ids: req.body?.ids,
+    resourceLabel: spec.resourceLabel,
+  });
+  if (!result.ok) {
+    return res.status(result.status).json({
+      ok: false,
+      code: result.code,
+      message: result.message,
+    });
+  }
+  audit(req, spec.action, spec.resourceType, '', `${Array.isArray(req.body?.ids) ? req.body.ids.length : 0} items`);
+  return res.json({ ok: true });
+}
+
+/**
+ * @param {unknown} startValue
+ * @param {unknown} endValue
+ */
+function validateDateRange(startValue, endValue) {
+  const startDate = asDate(startValue);
+  const endDate = asDate(endValue);
+  if (startDate === undefined) return { error: 'Start date must be YYYY-MM-DD.' };
+  if (endDate === undefined) return { error: 'End date must be YYYY-MM-DD.' };
+  if (startDate && endDate && startDate > endDate) {
+    return { error: 'End date must be on or after the start date.' };
+  }
+  return { startDate, endDate };
+}
+
+function isSafeNavHref(href) {
+  return href.startsWith('/') || href.startsWith('#');
+}
+
 // ─── Settings ───────────────────────────────────────────────────────────────
 
 cmsRouter.get('/settings', (_req, res) => {
@@ -47,7 +105,15 @@ cmsRouter.get('/settings', (_req, res) => {
 cmsRouter.put('/settings/:key', (req, res) => {
   const key = asString(req.params.key);
   if (!key) return res.status(400).json({ ok: false, message: 'Invalid setting key.' });
-  setSetting(getDb(), key, req.body);
+  const result = validateSetting(key, req.body);
+  if (!result.ok) {
+    return res.status(result.status).json({
+      ok: false,
+      code: result.code,
+      message: result.message,
+    });
+  }
+  setSetting(getDb(), key, result.data);
   audit(req, 'updated_setting', 'setting', key);
   return res.json({ ok: true, settings: getAllSettings(getDb()) });
 });
@@ -57,7 +123,15 @@ cmsRouter.get('/hero', (_req, res) => {
 });
 
 cmsRouter.put('/hero', (req, res) => {
-  setSetting(getDb(), 'hero', req.body);
+  const result = validateSetting('hero', req.body);
+  if (!result.ok) {
+    return res.status(result.status).json({
+      ok: false,
+      code: result.code,
+      message: result.message,
+    });
+  }
+  setSetting(getDb(), 'hero', result.data);
   audit(req, 'updated_hero', 'hero', 'hero');
   return res.json({ ok: true, hero: getSetting(getDb(), 'hero') });
 });
@@ -104,6 +178,15 @@ cmsRouter.post('/services', (req, res) => {
   return res.status(201).json({ ok: true, service: formatService(row) });
 });
 
+cmsRouter.put('/services/reorder', (req, res) => {
+  return handleReorder(req, res, {
+    table: 'services',
+    resourceLabel: 'service',
+    action: 'reordered_services',
+    resourceType: 'service',
+  });
+});
+
 cmsRouter.put('/services/:id', (req, res) => {
   const db = getDb();
   const existing = db.prepare('SELECT * FROM services WHERE id = ?').get(req.params.id);
@@ -146,15 +229,6 @@ cmsRouter.delete('/services/:id', (req, res) => {
   return res.json({ ok: true });
 });
 
-cmsRouter.put('/services/reorder', (req, res) => {
-  const ids = Array.isArray(req.body.ids) ? req.body.ids : [];
-  const db = getDb();
-  const update = db.prepare('UPDATE services SET display_order = ?, updated_at = datetime(\'now\') WHERE id = ?');
-  ids.forEach((id, index) => update.run(index + 1, id));
-  audit(req, 'reordered_services', 'service', '', `${ids.length} items`);
-  return res.json({ ok: true });
-});
-
 // ─── Testimonials ───────────────────────────────────────────────────────────
 
 cmsRouter.get('/testimonials', (_req, res) => {
@@ -179,6 +253,15 @@ cmsRouter.post('/testimonials', (req, res) => {
   audit(req, 'created_testimonial', 'testimonial', id);
   const row = getDb().prepare('SELECT * FROM testimonials WHERE id = ?').get(id);
   return res.status(201).json({ ok: true, testimonial: formatTestimonial(row) });
+});
+
+cmsRouter.put('/testimonials/reorder', (req, res) => {
+  return handleReorder(req, res, {
+    table: 'testimonials',
+    resourceLabel: 'testimonial',
+    action: 'reordered_testimonials',
+    resourceType: 'testimonial',
+  });
 });
 
 cmsRouter.put('/testimonials/:id', (req, res) => {
@@ -215,14 +298,6 @@ cmsRouter.delete('/testimonials/:id', (req, res) => {
   return res.json({ ok: true });
 });
 
-cmsRouter.put('/testimonials/reorder', (req, res) => {
-  const ids = Array.isArray(req.body.ids) ? req.body.ids : [];
-  const update = getDb().prepare('UPDATE testimonials SET display_order = ? WHERE id = ?');
-  ids.forEach((id, index) => update.run(index + 1, id));
-  audit(req, 'reordered_testimonials', 'testimonial');
-  return res.json({ ok: true });
-});
-
 // ─── Trusted Companies ──────────────────────────────────────────────────────
 
 cmsRouter.get('/trusted-companies', (_req, res) => {
@@ -244,6 +319,15 @@ cmsRouter.post('/trusted-companies', (req, res) => {
   audit(req, 'created_company', 'trusted_company', id, name);
   const row = getDb().prepare('SELECT * FROM trusted_companies WHERE id = ?').get(id);
   return res.status(201).json({ ok: true, company: formatTrustedCompany(row) });
+});
+
+cmsRouter.put('/trusted-companies/reorder', (req, res) => {
+  return handleReorder(req, res, {
+    table: 'trusted_companies',
+    resourceLabel: 'company',
+    action: 'reordered_companies',
+    resourceType: 'trusted_company',
+  });
 });
 
 cmsRouter.put('/trusted-companies/:id', (req, res) => {
@@ -279,14 +363,6 @@ cmsRouter.delete('/trusted-companies/:id', (req, res) => {
   return res.json({ ok: true });
 });
 
-cmsRouter.put('/trusted-companies/reorder', (req, res) => {
-  const ids = Array.isArray(req.body.ids) ? req.body.ids : [];
-  const update = getDb().prepare('UPDATE trusted_companies SET display_order = ? WHERE id = ?');
-  ids.forEach((id, index) => update.run(index + 1, id));
-  audit(req, 'reordered_companies', 'trusted_company');
-  return res.json({ ok: true });
-});
-
 // ─── Technologies ───────────────────────────────────────────────────────────
 
 cmsRouter.get('/technologies', (_req, res) => {
@@ -310,6 +386,15 @@ cmsRouter.post('/technologies', (req, res) => {
   audit(req, 'created_technology', 'technology', id, name);
   const row = getDb().prepare('SELECT * FROM technologies WHERE id = ?').get(id);
   return res.status(201).json({ ok: true, technology: formatTechnology(row) });
+});
+
+cmsRouter.put('/technologies/reorder', (req, res) => {
+  return handleReorder(req, res, {
+    table: 'technologies',
+    resourceLabel: 'technology',
+    action: 'reordered_technologies',
+    resourceType: 'technology',
+  });
 });
 
 cmsRouter.put('/technologies/:id', (req, res) => {
@@ -346,14 +431,6 @@ cmsRouter.delete('/technologies/:id', (req, res) => {
   return res.json({ ok: true });
 });
 
-cmsRouter.put('/technologies/reorder', (req, res) => {
-  const ids = Array.isArray(req.body.ids) ? req.body.ids : [];
-  const update = getDb().prepare('UPDATE technologies SET display_order = ? WHERE id = ?');
-  ids.forEach((id, index) => update.run(index + 1, id));
-  audit(req, 'reordered_technologies', 'technology');
-  return res.json({ ok: true });
-});
-
 // ─── Process Steps ──────────────────────────────────────────────────────────
 
 cmsRouter.get('/process-steps', (_req, res) => {
@@ -377,6 +454,15 @@ cmsRouter.post('/process-steps', (req, res) => {
   audit(req, 'created_process_step', 'process_step', id);
   const row = getDb().prepare('SELECT * FROM process_steps WHERE id = ?').get(id);
   return res.status(201).json({ ok: true, step: formatProcessStep(row) });
+});
+
+cmsRouter.put('/process-steps/reorder', (req, res) => {
+  return handleReorder(req, res, {
+    table: 'process_steps',
+    resourceLabel: 'process step',
+    action: 'reordered_process_steps',
+    resourceType: 'process_step',
+  });
 });
 
 cmsRouter.put('/process-steps/:id', (req, res) => {
@@ -411,14 +497,6 @@ cmsRouter.delete('/process-steps/:id', (req, res) => {
   return res.json({ ok: true });
 });
 
-cmsRouter.put('/process-steps/reorder', (req, res) => {
-  const ids = Array.isArray(req.body.ids) ? req.body.ids : [];
-  const update = getDb().prepare('UPDATE process_steps SET display_order = ? WHERE id = ?');
-  ids.forEach((id, index) => update.run(index + 1, id));
-  audit(req, 'reordered_process_steps', 'process_step');
-  return res.json({ ok: true });
-});
-
 // ─── Website Updates ────────────────────────────────────────────────────────
 
 cmsRouter.get('/updates', (_req, res) => {
@@ -431,6 +509,8 @@ cmsRouter.post('/updates', (req, res) => {
   if (!title) return res.status(400).json({ ok: false, message: 'Title is required.' });
   const ctaUrl = asString(req.body.ctaUrl);
   if (ctaUrl && !isValidUrl(ctaUrl)) return res.status(400).json({ ok: false, message: 'Invalid CTA URL.' });
+  const dates = validateDateRange(req.body.startDate, req.body.endDate);
+  if (dates.error) return res.status(400).json({ ok: false, message: dates.error });
   const id = randomUUID();
   getDb().prepare(`
     INSERT INTO website_updates (id, title, short_description, full_description, image_url, category, cta_text, cta_url, published, featured, start_date, end_date, display_order)
@@ -440,7 +520,7 @@ cmsRouter.post('/updates', (req, res) => {
     asString(req.body.imageUrl), asString(req.body.category) || 'announcement',
     asString(req.body.ctaText), ctaUrl ? normalizeUrl(ctaUrl) : '',
     asBool(req.body.published) ? 1 : 0, asBool(req.body.featured) ? 1 : 0,
-    asString(req.body.startDate) || null, asString(req.body.endDate) || null, asInt(req.body.displayOrder, 0),
+    dates.startDate, dates.endDate, asInt(req.body.displayOrder, 0),
   );
   audit(req, 'created_update', 'website_update', id, title);
   const row = getDb().prepare('SELECT * FROM website_updates WHERE id = ?').get(id);
@@ -453,6 +533,10 @@ cmsRouter.put('/updates/:id', (req, res) => {
   if (!existing) return res.status(404).json({ ok: false, message: 'Update not found.' });
   const ctaUrl = req.body.ctaUrl !== undefined ? asString(req.body.ctaUrl) : existing.cta_url;
   if (ctaUrl && !isValidUrl(ctaUrl)) return res.status(400).json({ ok: false, message: 'Invalid CTA URL.' });
+  const nextStart = req.body.startDate !== undefined ? req.body.startDate : existing.start_date;
+  const nextEnd = req.body.endDate !== undefined ? req.body.endDate : existing.end_date;
+  const dates = validateDateRange(nextStart, nextEnd);
+  if (dates.error) return res.status(400).json({ ok: false, message: dates.error });
   db.prepare(`
     UPDATE website_updates SET title=?, short_description=?, full_description=?, image_url=?, category=?,
     cta_text=?, cta_url=?, published=?, featured=?, start_date=?, end_date=?, display_order=?, updated_at=datetime('now') WHERE id=?
@@ -466,8 +550,8 @@ cmsRouter.put('/updates/:id', (req, res) => {
     ctaUrl ? normalizeUrl(ctaUrl) : '',
     req.body.published !== undefined ? (asBool(req.body.published) ? 1 : 0) : existing.published,
     req.body.featured !== undefined ? (asBool(req.body.featured) ? 1 : 0) : existing.featured,
-    req.body.startDate !== undefined ? (asString(req.body.startDate) || null) : existing.start_date,
-    req.body.endDate !== undefined ? (asString(req.body.endDate) || null) : existing.end_date,
+    dates.startDate,
+    dates.endDate,
     req.body.displayOrder !== undefined ? asInt(req.body.displayOrder, existing.display_order) : existing.display_order,
     req.params.id,
   );
@@ -546,15 +630,30 @@ cmsRouter.get('/navigation', (_req, res) => {
   return res.json({ ok: true, navigation: rows.map(formatNavigationItem) });
 });
 
+cmsRouter.post('/navigation', (_req, res) => {
+  return res.status(405).json({
+    ok: false,
+    code: 'not_allowed',
+    message: 'Navigation items are system-managed. Edit an existing item instead of creating a new one.',
+  });
+});
+
 cmsRouter.put('/navigation/:id', (req, res) => {
   const db = getDb();
   const existing = db.prepare('SELECT * FROM navigation_items WHERE id = ?').get(req.params.id);
   if (!existing) return res.status(404).json({ ok: false, message: 'Navigation item not found.' });
+  const href = asString(req.body.href) || existing.href;
+  if (!isSafeNavHref(href)) {
+    return res.status(400).json({
+      ok: false,
+      message: 'Navigation href must be a site path or in-page hash (starting with / or #).',
+    });
+  }
   db.prepare(`
     UPDATE navigation_items SET label=?, href=?, active=?, display_order=?, updated_at=datetime('now') WHERE id=?
   `).run(
     asString(req.body.label) || existing.label,
-    asString(req.body.href) || existing.href,
+    href,
     req.body.active !== undefined ? (asBool(req.body.active) ? 1 : 0) : existing.active,
     req.body.displayOrder !== undefined ? asInt(req.body.displayOrder, existing.display_order) : existing.display_order,
     req.params.id,
@@ -562,6 +661,14 @@ cmsRouter.put('/navigation/:id', (req, res) => {
   audit(req, 'updated_navigation', 'navigation', req.params.id);
   const row = db.prepare('SELECT * FROM navigation_items WHERE id = ?').get(req.params.id);
   return res.json({ ok: true, item: formatNavigationItem(row) });
+});
+
+cmsRouter.delete('/navigation/:id', (_req, res) => {
+  return res.status(405).json({
+    ok: false,
+    code: 'not_allowed',
+    message: 'Navigation items cannot be deleted. Deactivate an item to hide it from the public site.',
+  });
 });
 
 // ─── Media ──────────────────────────────────────────────────────────────────
@@ -582,7 +689,14 @@ cmsRouter.get('/media', (req, res) => {
   query += ' ORDER BY created_at DESC LIMIT ? OFFSET ?';
   params.push(limit, offset);
 
-  const items = db.prepare(query).all(...params).map(formatMedia);
+  const items = db.prepare(query).all(...params).map((row) => {
+    const formatted = formatMedia(row);
+    const diskPath = resolveManagedUploadPath(row.url);
+    return {
+      ...formatted,
+      fileMissing: Boolean(diskPath) && !fs.existsSync(diskPath),
+    };
+  });
   const total = search
     ? db.prepare('SELECT COUNT(*) AS count FROM media WHERE lower(filename) LIKE ? OR lower(alt_text) LIKE ?').get(`%${search}%`, `%${search}%`).count
     : db.prepare('SELECT COUNT(*) AS count FROM media').get().count;
@@ -590,11 +704,22 @@ cmsRouter.get('/media', (req, res) => {
   return res.json({ ok: true, media: items, pagination: { page, limit, total } });
 });
 
+cmsRouter.put('/media/:id', (req, res) => {
+  const db = getDb();
+  const existing = db.prepare('SELECT * FROM media WHERE id = ?').get(req.params.id);
+  if (!existing) return res.status(404).json({ ok: false, message: 'Media not found.' });
+  const altText = req.body.altText !== undefined ? asString(req.body.altText).slice(0, 200) : existing.alt_text;
+  db.prepare('UPDATE media SET alt_text = ? WHERE id = ?').run(altText, req.params.id);
+  audit(req, 'updated_media', 'media', req.params.id);
+  const row = db.prepare('SELECT * FROM media WHERE id = ?').get(req.params.id);
+  return res.json({ ok: true, media: formatMedia(row) });
+});
+
 cmsRouter.delete('/media/:id', (req, res) => {
   const db = getDb();
-  if (!db.prepare('SELECT id FROM media WHERE id = ?').get(req.params.id)) {
-    return res.status(404).json({ ok: false, message: 'Media not found.' });
-  }
+  const existing = db.prepare('SELECT * FROM media WHERE id = ?').get(req.params.id);
+  if (!existing) return res.status(404).json({ ok: false, message: 'Media not found.' });
+  deleteManagedUpload(existing.url);
   db.prepare('DELETE FROM media WHERE id = ?').run(req.params.id);
   audit(req, 'deleted_media', 'media', req.params.id);
   return res.json({ ok: true });
@@ -607,8 +732,30 @@ cmsRouter.get('/activity-logs', (req, res) => {
   const page = Math.max(1, asInt(req.query.page, 1));
   const limit = Math.min(100, Math.max(1, asInt(req.query.limit, 50)));
   const offset = (page - 1) * limit;
-  const rows = db.prepare('SELECT * FROM activity_logs ORDER BY created_at DESC LIMIT ? OFFSET ?').all(limit, offset);
-  const total = db.prepare('SELECT COUNT(*) AS count FROM activity_logs').get().count;
+  const action = asString(req.query.action);
+  const resourceType = asString(req.query.resourceType);
+  const adminEmail = asString(req.query.adminEmail).toLowerCase();
+
+  const where = [];
+  const params = [];
+  if (action) {
+    where.push('action = ?');
+    params.push(action);
+  }
+  if (resourceType) {
+    where.push('resource_type = ?');
+    params.push(resourceType);
+  }
+  if (adminEmail) {
+    where.push('lower(admin_email) LIKE ?');
+    params.push(`%${adminEmail}%`);
+  }
+
+  const whereSql = where.length > 0 ? `WHERE ${where.join(' AND ')}` : '';
+  const rows = db
+    .prepare(`SELECT * FROM activity_logs ${whereSql} ORDER BY created_at DESC LIMIT ? OFFSET ?`)
+    .all(...params, limit, offset);
+  const total = db.prepare(`SELECT COUNT(*) AS count FROM activity_logs ${whereSql}`).get(...params).count;
   return res.json({
     ok: true,
     logs: rows.map(formatActivityLog),
@@ -618,7 +765,7 @@ cmsRouter.get('/activity-logs', (req, res) => {
 
 // ─── Admin Users ────────────────────────────────────────────────────────────
 
-cmsRouter.get('/users', (_req, res) => {
+cmsRouter.get('/users', requireUserAdmin, (_req, res) => {
   const rows = getDb().prepare('SELECT id, email, name, role, active, created_at, updated_at FROM admin_users ORDER BY created_at ASC').all();
   return res.json({
     ok: true,
@@ -634,44 +781,87 @@ cmsRouter.get('/users', (_req, res) => {
   });
 });
 
-cmsRouter.post('/users', (req, res) => {
-  if (req.admin?.role && req.admin.role !== 'super_admin') {
-    return res.status(403).json({ ok: false, message: 'Insufficient permissions.' });
-  }
-  const email = asString(req.body.email);
+cmsRouter.post('/users', requireUserAdmin, (req, res) => {
+  const email = normalizeEmail(req.body.email);
   const password = asString(req.body.password);
   if (!email || !password) return res.status(400).json({ ok: false, message: 'Email and password required.' });
+  if (!isValidEmail(email)) return res.status(400).json({ ok: false, message: 'Enter a valid email address.' });
   if (password.length < 8) return res.status(400).json({ ok: false, message: 'Password must be at least 8 characters.' });
+  const role = asString(req.body.role) || 'content_manager';
+  if (!ADMIN_ROLES.includes(role)) {
+    return res.status(400).json({ ok: false, message: 'Invalid role.' });
+  }
   const db = getDb();
-  const exists = db.prepare('SELECT id FROM admin_users WHERE email = ?').get(email);
+  const exists = db.prepare('SELECT id FROM admin_users WHERE lower(email) = ?').get(email);
   if (exists) return res.status(409).json({ ok: false, message: 'Email already exists.' });
   const id = randomUUID();
   const hash = bcrypt.hashSync(password, 12);
+  const name = asString(req.body.name);
+  const active = asBool(req.body.active, true);
   db.prepare('INSERT INTO admin_users (id, email, password_hash, name, role, active) VALUES (?, ?, ?, ?, ?, ?)').run(
-    id, email, hash, asString(req.body.name), asString(req.body.role) || 'content_manager', asBool(req.body.active, true) ? 1 : 0,
+    id, email, hash, name, role, active ? 1 : 0,
   );
   audit(req, 'created_user', 'admin_user', id, email);
-  return res.status(201).json({ ok: true, user: { id, email, name: asString(req.body.name), role: asString(req.body.role) || 'content_manager' } });
+  return res.status(201).json({ ok: true, user: { id, email, name, role, active } });
 });
 
-cmsRouter.put('/users/:id', (req, res) => {
+cmsRouter.put('/users/:id', requireUserAdmin, (req, res) => {
   const db = getDb();
   const existing = db.prepare('SELECT * FROM admin_users WHERE id = ?').get(req.params.id);
   if (!existing) return res.status(404).json({ ok: false, message: 'User not found.' });
   const password = asString(req.body.password);
   if (password) {
     if (password.length < 8) return res.status(400).json({ ok: false, message: 'Password must be at least 8 characters.' });
-    const hash = bcrypt.hashSync(password, 12);
-    db.prepare('UPDATE admin_users SET password_hash = ?, updated_at = datetime(\'now\') WHERE id = ?').run(hash, req.params.id);
   }
-  db.prepare(`
-    UPDATE admin_users SET name=?, role=?, active=?, updated_at=datetime('now') WHERE id=?
-  `).run(
-    req.body.name !== undefined ? asString(req.body.name) : existing.name,
-    req.body.role !== undefined ? asString(req.body.role) : existing.role,
-    req.body.active !== undefined ? (asBool(req.body.active) ? 1 : 0) : existing.active,
-    req.params.id,
-  );
+  const nextRole = req.body.role !== undefined ? asString(req.body.role) : existing.role;
+  if (!ADMIN_ROLES.includes(nextRole)) {
+    return res.status(400).json({ ok: false, message: 'Invalid role.' });
+  }
+  const nextActive = req.body.active !== undefined ? (asBool(req.body.active) ? 1 : 0) : existing.active;
+
+  if (req.admin.id === req.params.id && nextActive === 0) {
+    return res.status(400).json({ ok: false, message: 'You cannot deactivate your own account.' });
+  }
+
+  const removingSuper =
+    existing.role === 'super_admin' && (nextRole !== 'super_admin' || nextActive === 0);
+  if (removingSuper) {
+    const remaining = db
+      .prepare(
+        "SELECT COUNT(*) AS count FROM admin_users WHERE role = 'super_admin' AND active = 1 AND id != ?",
+      )
+      .get(req.params.id).count;
+    if (remaining === 0) {
+      return res.status(409).json({
+        ok: false,
+        code: 'last_super_admin',
+        message: 'Cannot remove the last active super admin.',
+      });
+    }
+  }
+
+  const nextName = req.body.name !== undefined ? asString(req.body.name) : existing.name;
+  const applyUpdate = db.transaction(() => {
+    if (password) {
+      const hash = bcrypt.hashSync(password, 12);
+      db.prepare(
+        "UPDATE admin_users SET password_hash = ?, name = ?, role = ?, active = ?, updated_at = datetime('now') WHERE id = ?",
+      ).run(hash, nextName, nextRole, nextActive, req.params.id);
+      return;
+    }
+    db.prepare(
+      "UPDATE admin_users SET name = ?, role = ?, active = ?, updated_at = datetime('now') WHERE id = ?",
+    ).run(nextName, nextRole, nextActive, req.params.id);
+  });
+  applyUpdate();
   audit(req, 'updated_user', 'admin_user', req.params.id);
   return res.json({ ok: true });
+});
+
+cmsRouter.delete('/users/:id', requireUserAdmin, (_req, res) => {
+  return res.status(405).json({
+    ok: false,
+    code: 'not_allowed',
+    message: 'Admin users cannot be deleted. Deactivate the account instead.',
+  });
 });

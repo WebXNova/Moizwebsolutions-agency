@@ -1,4 +1,5 @@
 import { HeroCTA } from '@/components/hero/HeroCTA';
+import { HeroHeadline } from '@/components/hero/HeroHeadline';
 import { usePrefersReducedMotion } from '@/hooks/usePrefersReducedMotion';
 import { cn } from '@/lib/cn';
 
@@ -7,40 +8,17 @@ import { cn } from '@/lib/cn';
  *   titleLines: string[];
  *   paragraph: string;
  *   cta: { label: string };
+ *   secondaryCta?: { label?: string; url?: string };
  *   onCtaClick?: () => void;
  * }} props
  */
-export function HeroContent({ titleLines, paragraph, cta, onCtaClick }) {
+export function HeroContent({ titleLines, paragraph, cta, secondaryCta, onCtaClick }) {
   const reduced = usePrefersReducedMotion();
+  const secondaryLabel = secondaryCta?.label?.trim();
 
   return (
     <div>
-      <h1
-        aria-label={titleLines.join(' ')}
-        className={cn(
-          'max-w-[12ch] font-light leading-[0.95] tracking-[-0.035em] text-foreground',
-          'text-[clamp(2.45rem,6.4vw,5.5rem)] sm:max-w-[13ch] md:max-w-[14ch]',
-        )}
-      >
-        {titleLines.map((line, lineIndex) => {
-          const isLast = lineIndex === titleLines.length - 1;
-
-          return (
-            <span key={`${line}-${lineIndex}`} className="block overflow-hidden py-[0.02em]">
-              <span
-                className={cn(
-                  'block text-balance',
-                  !reduced && 'motion-safe:animate-band-heading',
-                  isLast && !reduced && 'fx-shimmer-text motion-safe:animate-text-shimmer',
-                )}
-                style={!reduced ? { animationDelay: `${lineIndex * 130}ms` } : undefined}
-              >
-                {line}
-              </span>
-            </span>
-          );
-        })}
-      </h1>
+      <HeroHeadline titleLines={titleLines} />
 
       <p
         className={cn(
@@ -57,9 +35,27 @@ export function HeroContent({ titleLines, paragraph, cta, onCtaClick }) {
         )}
       </p>
 
-      <HeroCTA onClick={onCtaClick} className="mt-9 sm:mt-10 md:mt-11">
-        {cta.label}
-      </HeroCTA>
+      <div className="mt-9 flex flex-wrap items-center gap-5 sm:mt-10 md:mt-11">
+        <HeroCTA onClick={onCtaClick}>{cta.label}</HeroCTA>
+        {secondaryLabel ? (
+          secondaryCta.url ? (
+            <a
+              href={secondaryCta.url}
+              className="text-[13px] font-medium text-muted-foreground underline-offset-4 hover:text-foreground hover:underline"
+            >
+              {secondaryLabel}
+            </a>
+          ) : (
+            <button
+              type="button"
+              onClick={onCtaClick}
+              className="text-[13px] font-medium text-muted-foreground underline-offset-4 hover:text-foreground hover:underline"
+            >
+              {secondaryLabel}
+            </button>
+          )
+        ) : null}
+      </div>
     </div>
   );
 }

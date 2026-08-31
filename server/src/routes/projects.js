@@ -1,9 +1,10 @@
 import { Router } from 'express';
 import { randomUUID } from 'node:crypto';
 import { getDb } from '../db/index.js';
-import { requireAuth } from '../middleware/auth.js';
+import { canViewUnpublished, optionalAuth, requireAuth, requireWrite } from '../middleware/auth.js';
 import { slugify } from '../lib/slug.js';
-import { asBool, asInt, asString, isValidUrl, normalizeUrl } from '../lib/validators.js';
+import { deleteUnreferencedProjectImage } from '../lib/uploads.js';
+import { asBool, asInt, asOptionalUrl, asString, isValidUrl, normalizeUrl } from '../lib/validators.js';
 
 export const projectsRouter = Router();
 
@@ -22,7 +23,7 @@ function formatProject(row) {
     imageUrl: row.image_url,
     liveUrl: row.live_url,
     featured: Boolean(row.featured),
-    published: row.published !== undefined ? Boolean(row.published) : true,
+    published: Boolean(row.published),
     client: row.client ?? '',
     year: row.year ?? null,
     githubUrl: row.github_url ?? '',
@@ -51,20 +52,30 @@ function validateProjectBody(body, isUpdate = false) {
   const title = asString(body.title);
   const categoryId = asString(body.categoryId);
   const description = asString(body.description);
-  const technologies = asString(body.technologies);
   const imageUrl = asString(body.imageUrl);
   const liveUrlRaw = asString(body.liveUrl);
   const slug = asString(body.slug) || (title ? slugify(title) : '');
   const featured = asBool(body.featured);
   const published = asBool(body.published, true);
   const displayOrder = asInt(body.displayOrder, 0);
-  const client = asString(body.client);
-  const year = body.year !== undefined && body.year !== null && body.year !== '' ? asInt(body.year, null) : null;
-  const githubUrl = asString(body.githubUrl);
-  const seoTitle = asString(body.seoTitle);
-  const seoDescription = asString(body.seoDescription);
-  const seoOgImage = asString(body.seoOgImage);
-  const previewObjectPosition = asString(body.previewObjectPosition) || 'center';
+  const client = asString(body.client).slice(0, 160);
+  const technologiesValue = asString(body.technologies).slice(0, 500);
+  const githubRaw = asString(body.githubUrl);
+  const githubUrl = githubRaw ? asOptionalUrl(body.githubUrl) : '';
+  const seoTitle = asString(body.seoTitle).slice(0, 80);
+  const seoDescription = asString(body.seoDescription).slice(0, 320);
+  const seoOgImage = asString(body.seoOgImage).slice(0, 500);
+  const previewObjectPosition = asString(body.previewObjectPosition).slice(0, 80) || 'center';
+
+  let year = null;
+  if (body.year !== undefined && body.year !== null && body.year !== '') {
+    const parsedYear = asInt(body.year, Number.NaN);
+    if (!Number.isFinite(parsedYear) || parsedYear < 1990 || parsedYear > 2100) {
+      errors.year = 'Enter a year between 1990 and 2100.';
+    } else {
+      year = parsedYear;
+    }
+  }
 
   if (!isUpdate || body.title !== undefined) {
     if (!title) errors.title = 'Project title is required.';
@@ -85,6 +96,10 @@ function validateProjectBody(body, isUpdate = false) {
 
   const liveUrl = liveUrlRaw ? normalizeUrl(liveUrlRaw) : null;
 
+  if (githubRaw && githubUrl === null) {
+    errors.githubUrl = 'Enter a valid URL (https://...).';
+  }
+
   return {
     errors,
     data: {
@@ -92,7 +107,7 @@ function validateProjectBody(body, isUpdate = false) {
       slug,
       categoryId,
       description,
-      technologies,
+      technologies: technologiesValue,
       imageUrl,
       liveUrl,
       featured,
@@ -100,7 +115,7 @@ function validateProjectBody(body, isUpdate = false) {
       displayOrder,
       client,
       year,
-      githubUrl,
+      githubUrl: githubUrl || '',
       seoTitle,
       seoDescription,
       seoOgImage,
@@ -109,11 +124,13 @@ function validateProjectBody(body, isUpdate = false) {
   };
 }
 
-projectsRouter.get('/', (req, res) => {
+projectsRouter.get('/', optionalAuth, (req, res) => {
   const db = getDb();
   const featuredOnly = req.query.featured === 'true' || req.query.featured === '1';
   const categoryId = asString(req.query.categoryId);
-  const includeUnpublished = req.query.includeUnpublished === 'true';
+  const includeUnpublished =
+    canViewUnpublished(req) &&
+    (req.query.includeUnpublished === 'true' || req.query.includeUnpublished === '1');
 
   let query = PROJECT_SELECT + ' WHERE 1=1';
   const params = [];
@@ -135,16 +152,16 @@ projectsRouter.get('/', (req, res) => {
   return res.json({ ok: true, projects: rows.map(formatProject) });
 });
 
-projectsRouter.get('/:id', (req, res) => {
+projectsRouter.get('/:id', optionalAuth, (req, res) => {
   const db = getDb();
   const row = db.prepare(PROJECT_SELECT + ' WHERE p.id = ?').get(req.params.id);
-  if (!row) {
+  if (!row || (!row.published && !canViewUnpublished(req))) {
     return res.status(404).json({ ok: false, code: 'not_found', message: 'Project not found.' });
   }
   return res.json({ ok: true, project: formatProject(row) });
 });
 
-projectsRouter.post('/', requireAuth, (req, res) => {
+projectsRouter.post('/', requireAuth, requireWrite, (req, res) => {
   const { errors, data } = validateProjectBody(req.body);
   if (Object.keys(errors).length > 0) {
     return res.status(400).json({
@@ -208,7 +225,7 @@ projectsRouter.post('/', requireAuth, (req, res) => {
   return res.status(201).json({ ok: true, project: formatProject(row) });
 });
 
-projectsRouter.put('/:id', requireAuth, (req, res) => {
+projectsRouter.put('/:id', requireAuth, requireWrite, (req, res) => {
   const db = getDb();
   const existing = db.prepare('SELECT * FROM projects WHERE id = ?').get(req.params.id);
   if (!existing) {
@@ -233,7 +250,7 @@ projectsRouter.put('/:id', requireAuth, (req, res) => {
   const imageUrl = data.imageUrl || existing.image_url;
   const liveUrl = data.liveUrl || existing.live_url;
   const featured = req.body.featured !== undefined ? data.featured : Boolean(existing.featured);
-  const published = req.body.published !== undefined ? data.published : Boolean(existing.published ?? 1);
+  const published = req.body.published !== undefined ? data.published : Boolean(existing.published);
   const displayOrder =
     req.body.displayOrder !== undefined ? data.displayOrder : existing.display_order;
   const client = req.body.client !== undefined ? data.client : (existing.client ?? '');
@@ -294,17 +311,22 @@ projectsRouter.put('/:id', requireAuth, (req, res) => {
     req.params.id,
   );
 
+  if (imageUrl !== existing.image_url) {
+    deleteUnreferencedProjectImage(db, existing.image_url, req.params.id);
+  }
+
   const row = db.prepare(PROJECT_SELECT + ' WHERE p.id = ?').get(req.params.id);
   return res.json({ ok: true, project: formatProject(row) });
 });
 
-projectsRouter.delete('/:id', requireAuth, (req, res) => {
+projectsRouter.delete('/:id', requireAuth, requireWrite, (req, res) => {
   const db = getDb();
-  const existing = db.prepare('SELECT id FROM projects WHERE id = ?').get(req.params.id);
+  const existing = db.prepare('SELECT id, image_url FROM projects WHERE id = ?').get(req.params.id);
   if (!existing) {
     return res.status(404).json({ ok: false, code: 'not_found', message: 'Project not found.' });
   }
 
   db.prepare('DELETE FROM projects WHERE id = ?').run(req.params.id);
+  deleteUnreferencedProjectImage(db, existing.image_url);
   return res.json({ ok: true });
 });

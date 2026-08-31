@@ -1,3 +1,6 @@
+/**
+ * Legacy static process section. Not mounted; ProcessRow in ClosingBand is the live UI.
+ */
 import { Container } from '@/components/common/Container';
 import { Section } from '@/components/common/Section';
 import { SectionHeading } from '@/components/common/SectionHeading';

@@ -1,17 +1,201 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" class="is-booting">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Moiz Web Solutions</title>
     <meta name="description" content="Premium web design and development studio." />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="preload" as="image" href="/assets/mws-monogram.png" fetchpriority="high" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
       href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700&family=Inter:wght@300;400;500;600&family=Outfit:wght@200;300;400;500&display=swap"
       rel="stylesheet"
     />
+    <!-- Critical boot CSS: architecture unchanged — MW monogram is the loading identity -->
+    <style>
+      html {
+        background: #f7f6f2;
+      }
+      html.dark {
+        background: #0b1018;
+        color-scheme: dark;
+      }
+      body {
+        margin: 0;
+        min-width: 320px;
+        background: #f7f6f2;
+      }
+      html.dark body {
+        background: #0b1018;
+      }
+      body.is-loading {
+        overflow: hidden;
+      }
+      body.is-loading #root {
+        pointer-events: none !important;
+      }
+      body.is-loading:not(.is-handoff) #root {
+        visibility: hidden !important;
+      }
+      body.is-logo-handoff header [data-nav-logo] {
+        opacity: 0 !important;
+        transition: none !important;
+      }
+
+      /* Full-bleed plate = page background only (no card) */
+      #loading-screen {
+        position: fixed;
+        inset: 0;
+        z-index: 99999;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: #f7f6f2;
+        opacity: 1;
+        visibility: visible;
+        transition:
+          background-color 0.72s cubic-bezier(0.22, 1, 0.36, 1),
+          opacity 0.42s cubic-bezier(0.22, 1, 0.36, 1),
+          visibility 0.42s cubic-bezier(0.22, 1, 0.36, 1);
+      }
+      html.dark #loading-screen {
+        background: #0b1018;
+      }
+      #loading-screen.is-handoff {
+        background-color: transparent;
+        pointer-events: none;
+      }
+      #loading-screen.is-hiding {
+        opacity: 0;
+        visibility: hidden;
+        pointer-events: none;
+      }
+
+      /* Free-floating stack — no box, padding, border, or shadow */
+      .boot-loader {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        background: transparent;
+      }
+
+      .boot-stage {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        animation: boot-enter 520ms cubic-bezier(0.22, 1, 0.36, 1) both;
+      }
+
+      .boot-logo {
+        display: block;
+        width: clamp(6.75rem, 22vmin, 10.5rem);
+        height: auto;
+        aspect-ratio: 210 / 206;
+        max-width: none;
+        object-fit: contain;
+        transform-origin: center center;
+        animation: boot-breathe 3.2s ease-in-out 520ms infinite;
+      }
+
+      html.dark .boot-logo {
+        filter: brightness(0) invert(0.9);
+      }
+
+      .boot-stage.is-frozen,
+      .boot-logo.is-frozen {
+        animation: none !important;
+      }
+
+      .boot-logo.is-traveling {
+        animation: none !important;
+      }
+
+      .boot-text {
+        margin-top: 1.25rem;
+        font-family: Inter, ui-sans-serif, system-ui, sans-serif;
+        font-size: 0.6875rem;
+        font-weight: 600;
+        letter-spacing: 0.16em;
+        text-transform: uppercase;
+        color: #2563eb;
+        animation: boot-text 2.4s ease-in-out infinite;
+        transition: opacity 280ms cubic-bezier(0.22, 1, 0.36, 1);
+      }
+      .boot-text::after {
+        content: '';
+        display: inline-block;
+        width: 1.25em;
+        text-align: left;
+        animation: boot-dots 1.6s steps(4, end) infinite;
+      }
+      .boot-text.is-hidden {
+        opacity: 0;
+      }
+
+      @keyframes boot-enter {
+        from {
+          opacity: 0;
+          transform: translateY(8px) scale(0.88);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0) scale(1);
+        }
+      }
+
+      @keyframes boot-breathe {
+        0%,
+        100% {
+          transform: scale(1);
+        }
+        50% {
+          transform: scale(1.025);
+        }
+      }
+
+      @keyframes boot-text {
+        0%, 100% { opacity: 0.45; }
+        50% { opacity: 0.85; }
+      }
+
+      @keyframes boot-dots {
+        0% { content: ''; }
+        25% { content: '.'; }
+        50% { content: '..'; }
+        75% { content: '...'; }
+      }
+
+      @media (max-width: 600px) {
+        .boot-text {
+          margin-top: 1rem;
+          font-size: 0.625rem;
+        }
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        .boot-stage,
+        .boot-logo,
+        .boot-text,
+        .boot-text::after {
+          animation: none !important;
+        }
+        .boot-stage,
+        .boot-logo {
+          opacity: 1;
+          transform: none;
+        }
+        .boot-text {
+          opacity: 0.85;
+        }
+        .boot-text::after {
+          content: '';
+          width: 0;
+        }
+      }
+    </style>
     <script>
       (function () {
         var STORAGE_KEY = 'mws-theme';
@@ -25,8 +209,32 @@
       })();
     </script>
   </head>
-  <body>
-    <div id="root"></div>
+  <body class="is-loading">
+    <div
+      id="loading-screen"
+      role="status"
+      aria-live="polite"
+      aria-label="Loading"
+      aria-busy="true"
+    >
+      <div class="boot-loader">
+        <div class="boot-stage">
+          <img
+            id="boot-logo"
+            class="boot-logo logo-mark"
+            src="/assets/mws-monogram.png"
+            width="210"
+            height="206"
+            alt=""
+            aria-hidden="true"
+            fetchpriority="high"
+            decoding="async"
+          />
+        </div>
+        <span class="boot-text">Loading</span>
+      </div>
+    </div>
+    <div id="root" inert></div>
     <script type="module" src="/src/main.jsx"></script>
   </body>
 </html>

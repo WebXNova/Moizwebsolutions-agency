@@ -1,5 +1,6 @@
 import { assets } from '@/config/assets';
 
+/** Static fallback samples used only by the unused WorkPage archive. Live projects come from the API. */
 /** @type {import('@/types').Project[]} */
 export const projects = [
   {

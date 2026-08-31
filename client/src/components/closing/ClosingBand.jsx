@@ -1,9 +1,8 @@
-import { CinematicHeadline } from '@/components/closing/CinematicHeadline';
+import { CinematicHeadline, splitCtaHeadline } from '@/components/closing/CinematicHeadline';
 import { MagneticCta } from '@/components/closing/MagneticCta';
 import { ProcessRow } from '@/components/closing/ProcessRow';
 import { ClosingFooter } from '@/components/closing/ClosingFooter';
 import { useInquiry } from '@/context/InquiryProvider';
-import { finalCtaContent } from '@/config/contact';
 import { useSiteContent } from '@/hooks/useSiteContent';
 import { resolveFinalCta } from '@/lib/contentAdapters';
 
@@ -36,7 +35,7 @@ export function ClosingBand() {
         <section id="contact" aria-labelledby="closing-headline" className="scroll-mt-6">
           <div className="grid grid-cols-1 items-start gap-10 lg:grid-cols-12 lg:gap-8">
             <div className="lg:col-span-7">
-              <CinematicHeadline id="closing-headline" />
+              <CinematicHeadline id="closing-headline" lines={splitCtaHeadline(ctaContent.headline)} />
             </div>
 
             <div className="flex flex-col items-start gap-7 lg:col-span-4 lg:col-start-9 lg:pt-3">

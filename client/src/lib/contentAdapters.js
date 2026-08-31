@@ -39,6 +39,7 @@ export function resolveHero(apiHero) {
     ),
     paragraph: apiHero.paragraph || fallbackHero.paragraph,
     cta: apiHero.cta || fallbackHero.cta,
+    secondaryCta: apiHero.secondaryCta || { label: '', url: '' },
     stat: apiHero.stat || fallbackHero.stat,
     visual: apiHero.imageUrl
       ? { src: apiHero.imageUrl, alt: apiHero.imageAlt || '', width: 1448, height: 1086 }
@@ -55,7 +56,7 @@ export function resolveHero(apiHero) {
  * @param {Array<Record<string, unknown>> | null | undefined} apiServices
  */
 export function resolveServiceGroups(apiServices) {
-  if (!apiServices?.length) return serviceGroups;
+  if (!Array.isArray(apiServices)) return serviceGroups;
   return apiServices.map((service) => ({
     id: service.slug || service.id,
     icon: service.icon,
@@ -80,7 +81,7 @@ export function resolveServicesContent(apiContent) {
  * @param {Array<Record<string, unknown>> | null | undefined} apiItems
  */
 export function resolveTestimonials(apiItems) {
-  if (!apiItems?.length) return fallbackTestimonials;
+  if (!Array.isArray(apiItems)) return fallbackTestimonials;
   return apiItems.map((item) => ({
     id: item.id,
     quote: item.quote,
@@ -100,7 +101,7 @@ export function resolveTestimonialsLabel(apiLabels) {
  * @param {Array<Record<string, unknown>> | null | undefined} apiItems
  */
 export function resolveTrustedCompanies(apiItems) {
-  if (!apiItems?.length) return fallbackCompanies;
+  if (!Array.isArray(apiItems)) return fallbackCompanies;
   return apiItems.map((item) => ({
     id: item.id,
     name: item.name,
@@ -120,7 +121,7 @@ export function resolveTrustedCompaniesLabel(apiLabels) {
  * @param {Array<Record<string, unknown>> | null | undefined} apiItems
  */
 export function resolveTechnologies(apiItems) {
-  if (!apiItems?.length) return fallbackTechnologies;
+  if (!Array.isArray(apiItems)) return fallbackTechnologies;
   return apiItems.map((item) => ({
     id: item.slug || item.id,
     name: item.name,
@@ -148,7 +149,7 @@ export function resolveTechnologiesContent(apiLabels) {
  * @param {Array<Record<string, unknown>> | null | undefined} apiSteps
  */
 export function resolveProcessSteps(apiSteps) {
-  if (!apiSteps?.length) return fallbackProcess;
+  if (!Array.isArray(apiSteps)) return fallbackProcess;
   return apiSteps.map((step) => ({
     id: step.id,
     step: step.stepNumber,
@@ -176,6 +177,7 @@ export function resolveFinalCta(apiCta) {
   if (!apiCta) return finalCtaContent;
   return {
     eyebrow: apiCta.eyebrow || finalCtaContent.eyebrow,
+    headline: apiCta.headline || '',
     title: apiCta.title || finalCtaContent.title,
     subtitle: apiCta.subtitle || finalCtaContent.subtitle,
     cta: apiCta.cta || finalCtaContent.cta,
@@ -217,7 +219,7 @@ export function resolveSiteConfig(apiSite) {
  * @param {Array<Record<string, unknown>> | null | undefined} apiLinks
  */
 export function resolveSocialLinks(apiLinks) {
-  if (!apiLinks?.length) return fallbackSocial;
+  if (!Array.isArray(apiLinks)) return fallbackSocial;
   return apiLinks.map((link) => ({
     platform: link.platform,
     href: link.href,
@@ -229,7 +231,7 @@ export function resolveSocialLinks(apiLinks) {
  * @param {Array<Record<string, unknown>> | null | undefined} apiNav
  */
 export function resolveNavigation(apiNav) {
-  if (!apiNav?.length) return navigationLinks;
+  if (!Array.isArray(apiNav)) return navigationLinks;
   return apiNav.map((item) => ({
     label: item.label,
     href: item.href,

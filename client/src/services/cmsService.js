@@ -58,6 +58,7 @@ export async function deleteService(id) {
   await apiRequest(`/api/admin/cms/services/${id}`, { method: 'DELETE', ...authOpts });
 }
 
+/** Intended CMS reorder API. Admin lists do not yet expose drag-and-drop; the route is complete. */
 export async function reorderServices(ids) {
   await apiRequest('/api/admin/cms/services/reorder', jsonOpts('PUT', { ids }));
 }
@@ -229,6 +230,12 @@ export async function deleteMedia(id) {
   await apiRequest(`/api/admin/cms/media/${id}`, { method: 'DELETE', ...authOpts });
 }
 
+/** @param {string} id @param {{ altText?: string }} data */
+export async function updateMedia(id, data) {
+  const payload = await apiRequest(`/api/admin/cms/media/${id}`, jsonOpts('PUT', data));
+  return payload.media;
+}
+
 /** @param {File} file @param {string} [altText] */
 export async function uploadMedia(file, altText = '') {
   const formData = new FormData();
@@ -244,8 +251,11 @@ export async function uploadMedia(file, altText = '') {
 
 // ─── Activity Logs ────────────────────────────────────────────────────────────
 
-export async function getActivityLogs({ page = 1, limit = 50 } = {}) {
+export async function getActivityLogs({ page = 1, limit = 50, action = '', resourceType = '', adminEmail = '' } = {}) {
   const params = new URLSearchParams({ page: String(page), limit: String(limit) });
+  if (action) params.set('action', action);
+  if (resourceType) params.set('resourceType', resourceType);
+  if (adminEmail) params.set('adminEmail', adminEmail);
   const payload = await apiRequest(`/api/admin/cms/activity-logs?${params}`, authOpts);
   return { logs: payload.logs, pagination: payload.pagination };
 }

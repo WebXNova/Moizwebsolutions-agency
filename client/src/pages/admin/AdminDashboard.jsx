@@ -12,6 +12,7 @@ const quickActions = [
   { label: 'Add Service', to: '/admin/services' },
   { label: 'Add Technology', to: '/admin/technologies' },
   { label: 'New Update', to: '/admin/updates' },
+  { label: 'Inquiries', to: '/admin/inquiries' },
   { label: 'Upload Media', to: '/admin/media' },
   { label: 'Edit Homepage', to: '/admin/hero' },
 ];
@@ -42,14 +43,14 @@ export function AdminDashboard() {
         ) : (
           <>
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-              <StatsCard label="Total Projects" value={data.stats.totalProjects} />
-              <StatsCard label="Featured Projects" value={data.stats.featuredProjects} />
-              <StatsCard label="Services" value={data.stats.totalServices} />
-              <StatsCard label="Testimonials" value={data.stats.totalTestimonials} />
-              <StatsCard label="Trusted Companies" value={data.stats.totalCompanies} />
-              <StatsCard label="Technologies" value={data.stats.totalTechnologies} />
+              <StatsCard label="Published Projects" value={data.stats.publishedProjects} />
+              <StatsCard label="Draft Projects" value={data.stats.draftProjects} />
+              <StatsCard label="New Inquiries" value={data.stats.newInquiries ?? 0} />
+              <StatsCard label="Inquiries Today" value={data.stats.inquiriesToday ?? 0} />
+              <StatsCard label="Inquiries This Week" value={data.stats.inquiriesThisWeek ?? 0} />
+              <StatsCard label="Active Services" value={data.stats.activeServices} />
+              <StatsCard label="Media Files" value={data.stats.totalMedia} />
               <StatsCard label="Published Updates" value={data.stats.publishedUpdates} />
-              <StatsCard label="Draft Updates" value={data.stats.draftUpdates} />
             </div>
 
             <div className="grid gap-6 lg:grid-cols-2">
@@ -72,6 +73,14 @@ export function AdminDashboard() {
                   ) : null}
                   {data.health.missingSeoDescription ? (
                     <li>Homepage SEO description is empty.</li>
+                  ) : null}
+                  {data.stats.totalInquiries > 0 ? (
+                    <li>
+                      Inquiry pipeline:{' '}
+                      {Object.entries(data.stats.inquiryStatus || {})
+                        .map(([status, count]) => `${status} ${count}`)
+                        .join(', ') || 'none'}
+                    </li>
                   ) : null}
                 </ul>
               </div>

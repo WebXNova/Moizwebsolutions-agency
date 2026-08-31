@@ -20,7 +20,7 @@ export function HeroCTA({ onClick, className, children = 'Let\u2019s talk' }) {
       onPointerLeave={onPointerLeave}
       onBlur={onBlur}
       className={cn(
-        'group relative isolate mt-11 inline-flex items-center justify-center gap-3 overflow-hidden',
+        'group relative isolate inline-flex items-center justify-center gap-3 overflow-hidden',
         'rounded-md border border-brand-yellow bg-brand-yellow px-8 py-5',
         'text-cta font-semibold uppercase leading-none tracking-[0.18em] text-brand-ink',
         'shadow-[0_1px_0_rgb(255_255_255_/_0.4)_inset,0_10px_28px_-12px_rgb(255_194_14_/_0.7)]',

@@ -18,9 +18,20 @@ export function getDb() {
     db = new Database(env.db.path);
     db.pragma('journal_mode = WAL');
     db.pragma('foreign_keys = ON');
+    db.pragma('busy_timeout = 5000');
     initializeSchema(db);
     seedDatabase(db);
     seedCmsContent(db);
   }
   return db;
+}
+
+export function closeDb() {
+  if (!db) return;
+  try {
+    db.close();
+  } catch {
+    // already closed
+  }
+  db = null;
 }

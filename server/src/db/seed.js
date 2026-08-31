@@ -10,15 +10,17 @@ export function seedDatabase(db) {
   const adminExists = db.prepare('SELECT COUNT(*) AS count FROM admin_users').get().count;
   if (adminExists === 0 && env.admin.email && env.admin.password) {
     const hash = bcrypt.hashSync(env.admin.password, 12);
-    db.prepare('INSERT INTO admin_users (id, email, password_hash) VALUES (?, ?, ?)').run(
-      randomUUID(),
-      env.admin.email,
-      hash,
-    );
+    db.prepare(
+      'INSERT INTO admin_users (id, email, password_hash, name, role, active) VALUES (?, ?, ?, ?, ?, ?)',
+    ).run(randomUUID(), env.admin.email.toLowerCase(), hash, '', 'super_admin', 1);
   }
 
+  // Idempotent and production-safe: demo categories + sample project are inserted
+  // only into an empty categories table in development/test. Re-running init
+  // never duplicates rows. Production starts empty rather than shipping demo work.
   const categoryCount = db.prepare('SELECT COUNT(*) AS count FROM categories').get().count;
   if (categoryCount > 0) return;
+  if (env.isProduction) return;
 
   const categories = [
     { name: 'E-Commerce', slug: 'e-commerce' },
@@ -28,17 +30,6 @@ export function seedDatabase(db) {
     { name: 'Website Design', slug: 'website-design' },
     { name: 'Mobile App', slug: 'mobile-app' },
   ];
-
-  const insertCategory = db.prepare(
-    'INSERT INTO categories (id, name, slug) VALUES (?, ?, ?)',
-  );
-
-  const categoryIds = {};
-  for (const cat of categories) {
-    const id = randomUUID();
-    categoryIds[cat.slug] = id;
-    insertCategory.run(id, cat.name, cat.slug);
-  }
 
   const projects = [
     {
@@ -54,27 +45,39 @@ export function seedDatabase(db) {
     },
   ];
 
+  const insertCategory = db.prepare(
+    'INSERT INTO categories (id, name, slug) VALUES (?, ?, ?)',
+  );
   const insertProject = db.prepare(`
     INSERT INTO projects (
       id, title, slug, category_id, description, technologies,
-      image_url, live_url, featured, display_order
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      image_url, live_url, featured, published, display_order
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `);
 
-  for (const project of projects) {
-    const id = randomUUID();
-    const slug = slugify(project.title);
-    insertProject.run(
-      id,
-      project.title,
-      slug,
-      categoryIds[project.categorySlug],
-      project.description,
-      project.technologies,
-      project.imageUrl,
-      project.liveUrl,
-      project.featured,
-      project.displayOrder,
-    );
-  }
+  const seedCatalog = db.transaction(() => {
+    const categoryIds = {};
+    for (const cat of categories) {
+      const id = randomUUID();
+      categoryIds[cat.slug] = id;
+      insertCategory.run(id, cat.name, cat.slug);
+    }
+
+    for (const project of projects) {
+      insertProject.run(
+        randomUUID(),
+        project.title,
+        slugify(project.title),
+        categoryIds[project.categorySlug],
+        project.description,
+        project.technologies,
+        project.imageUrl,
+        project.liveUrl,
+        project.featured,
+        1,
+        project.displayOrder,
+      );
+    }
+  });
+  seedCatalog();
 }

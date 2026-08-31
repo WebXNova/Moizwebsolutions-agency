@@ -1,3 +1,6 @@
+/**
+ * Legacy static CTA. Not mounted; ClosingBand is the live contact closer.
+ */
 import { Container } from '@/components/common/Container';
 import { Section } from '@/components/common/Section';
 import { Button } from '@/components/common/Button';

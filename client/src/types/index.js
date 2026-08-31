@@ -56,7 +56,14 @@
  * @property {string} imageUrl
  * @property {string} liveUrl
  * @property {boolean} featured
+ * @property {boolean} [published]
  * @property {number} displayOrder
+ * @property {string} [client]
+ * @property {number|string} [year]
+ * @property {string} [githubUrl]
+ * @property {string} [seoTitle]
+ * @property {string} [seoDescription]
+ * @property {string} [previewObjectPosition]
  * @property {string} [createdAt]
  * @property {string} [updatedAt]
  * @property {string} [previewPosition]

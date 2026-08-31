@@ -1,6 +1,9 @@
 import { AdminHeader } from '@/components/admin/AdminHeader';
 import { useAuth } from '@/context/AuthProvider';
 
+/**
+ * Account identity for the signed-in admin. CMS site settings live under SEO & Site / Contact.
+ */
 export function AdminSettings() {
   const { admin } = useAuth();
 
@@ -14,8 +17,7 @@ export function AdminSettings() {
             Signed in as <strong className="text-foreground">{admin?.email}</strong>
           </p>
           <p className="mt-4 text-[12px] text-muted-foreground">
-            Admin credentials are configured via server environment variables. Contact your
-            administrator to update login details.
+            Admin users and passwords are managed under Users. This page only shows the signed-in account.
           </p>
         </div>
       </div>

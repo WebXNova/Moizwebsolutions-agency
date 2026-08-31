@@ -86,6 +86,9 @@ contentRouter.get('/', (_req, res) => {
   });
 });
 
+// Collection sub-routes are available for clients that want a smaller payload.
+// The public site loads GET / instead.
+
 contentRouter.get('/hero', (_req, res) => {
   const db = getDb();
   return res.json({ ok: true, hero: getSetting(db, 'hero') });

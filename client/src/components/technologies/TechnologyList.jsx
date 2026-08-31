@@ -16,13 +16,14 @@ function TechnologySet({ technologies, duplicate = false }) {
     <ul
       aria-hidden={duplicate || undefined}
       inert={duplicate || undefined}
-      className="flex shrink-0 items-stretch gap-x-8 pr-8 sm:gap-x-10 sm:pr-10 lg:gap-x-12 lg:pr-12"
+      className="flex shrink-0 items-stretch gap-x-10 pr-10 sm:gap-x-12 sm:pr-12 lg:gap-x-16 lg:pr-16"
     >
-      {technologies.map((technology) => (
+      {technologies.map((technology, index) => (
         <TechnologyItem
           key={duplicate ? `${technology.id}-loop` : technology.id}
           technology={technology}
           interactive={!duplicate}
+          shineDelay={(index % 5) * 0.85}
         />
       ))}
     </ul>
@@ -47,9 +48,13 @@ export function TechnologyList({ technologies = [], revealed = true }) {
 
   if (reduceMotion) {
     return (
-      <ul className="grid grid-cols-2 justify-items-center gap-y-6 sm:grid-cols-3 md:grid-cols-5">
-        {technologies.map((technology) => (
-          <TechnologyItem key={technology.id} technology={technology} />
+      <ul className="grid grid-cols-2 justify-items-center gap-x-4 gap-y-8 sm:grid-cols-3 md:grid-cols-5">
+        {technologies.map((technology, index) => (
+          <TechnologyItem
+            key={technology.id}
+            technology={technology}
+            shineDelay={(index % 5) * 0.85}
+          />
         ))}
       </ul>
     );
@@ -58,7 +63,7 @@ export function TechnologyList({ technologies = [], revealed = true }) {
   return (
     <div
       className={cn(
-        'group/marquee w-full max-w-full overflow-hidden',
+        'group/marquee tech-marquee-fade w-full max-w-full overflow-hidden py-5 sm:py-6',
         revealed ? 'motion-safe:animate-reveal-up' : 'motion-safe:opacity-0',
       )}
     >
@@ -66,7 +71,7 @@ export function TechnologyList({ technologies = [], revealed = true }) {
         className={cn(
           'flex w-max',
           '[--marquee-from:0] [--marquee-to:-50%]',
-          '[--marquee-duration:32s] sm:[--marquee-duration:28s] lg:[--marquee-duration:24s]',
+          '[--marquee-duration:28s] sm:[--marquee-duration:24s] lg:[--marquee-duration:20s]',
           revealed && 'motion-safe:animate-tech-marquee motion-reduce:animate-none',
           'hover-capable:group-hover/marquee:[animation-play-state:paused]',
           'group-focus-within/marquee:[animation-play-state:paused]',

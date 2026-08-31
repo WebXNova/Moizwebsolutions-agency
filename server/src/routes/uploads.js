@@ -4,7 +4,7 @@ import path from 'node:path';
 import fs from 'node:fs';
 import { randomUUID } from 'node:crypto';
 import { env } from '../config/env.js';
-import { requireAuth } from '../middleware/auth.js';
+import { requireAuth, requireWrite } from '../middleware/auth.js';
 import { getDb } from '../db/index.js';
 import { formatMedia } from '../cms/formatters.js';
 import { logActivity, getClientIp } from '../cms/activity.js';
@@ -92,11 +92,11 @@ function handleUpload(req, res, err, subdir = '') {
   return res.json({ ok: true, url });
 }
 
-uploadsRouter.post('/project-image', requireAuth, (req, res) => {
+uploadsRouter.post('/project-image', requireAuth, requireWrite, (req, res) => {
   upload.single('image')(req, res, (err) => handleUpload(req, res, err));
 });
 
-uploadsRouter.post('/media', requireAuth, (req, res) => {
+uploadsRouter.post('/media', requireAuth, requireWrite, (req, res) => {
   mediaUpload.single('image')(req, res, (err) => {
     if (err instanceof multer.MulterError) {
       const message =

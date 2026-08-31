@@ -18,6 +18,30 @@
     background-color: var(--background);
   }
 
+  /*
+   * Hold hero/chrome entrance while the HTML boot loader is up, then release
+   * when the MW monogram begins its flight so the homepage reveal is one beat.
+   */
+  html.is-booting .animate-hero-copy,
+  html.is-booting .animate-hero-line,
+  html.is-booting .animate-hero-enter,
+  html.is-booting .animate-hero-float,
+  html.is-booting .animate-hero-mark-draw,
+  html.is-booting .animate-hero-mark-text,
+  html.is-booting .animate-hero-mark-underline,
+  html.is-booting .animate-hero-spark,
+  html.is-booting .animate-caret-blink,
+  html.is-booting .fx-social-enter,
+  html.is-booting .fx-shimmer-text,
+  html.is-booting .animate-text-shimmer {
+    animation-play-state: paused;
+  }
+
+  body.is-logo-handoff header [data-nav-logo] {
+    opacity: 0 !important;
+    transition: none !important;
+  }
+
   @media (prefers-reduced-motion: reduce) {
     html {
       scroll-behavior: auto;
@@ -47,7 +71,24 @@
     .animate-text-shimmer,
     .animate-grain,
     .animate-card-snap,
-    .animate-caret-blink {
+    .animate-caret-blink,
+    .animate-rotate-loader,
+    .animate-loading-text-pulse,
+    .animate-loader-rotate,
+    .animate-loader-stroke,
+    .animate-loader-accent,
+    .animate-loader-pulse,
+    .animate-loader-text,
+    .animate-loader-dots,
+    .animate-hero-line,
+    .animate-hero-mark-draw,
+    .animate-hero-mark-text,
+    .animate-hero-mark-underline,
+    .animate-hero-spark,
+    .animate-reveal-up,
+    .animate-bar-grow,
+    .animate-price-swap,
+    .animate-tech-marquee {
       animation: none !important;
       opacity: 1 !important;
       filter: none !important;
@@ -226,7 +267,33 @@
   );
 }
 
+/*
+ * Soft left/right fade so the ticker enters and leaves the viewport
+ * instead of clipping against a hard edge.
+ */
+.tech-marquee-fade {
+  -webkit-mask-image: linear-gradient(
+    to right,
+    transparent 0%,
+    #000 5.5%,
+    #000 94.5%,
+    transparent 100%
+  );
+  mask-image: linear-gradient(
+    to right,
+    transparent 0%,
+    #000 5.5%,
+    #000 94.5%,
+    transparent 100%
+  );
+}
+
 @media (prefers-reduced-motion: reduce) {
+  .animate-tech-shine {
+    animation: none !important;
+    opacity: 0 !important;
+  }
+
   .band-motion {
     --line-draw: 1;
     --band-progress: 1;
@@ -728,6 +795,180 @@
   animation: side-label-in 180ms ease-out;
 }
 
+/* Fries menu icon — reference “Fries” glyph (short / full / medium, centered) */
+.fx-fries-bar {
+  position: absolute;
+  left: 50%;
+  height: 2px;
+  border-radius: 9999px;
+  background-color: currentColor;
+  transform: translateX(-50%);
+  transform-origin: center;
+  transition:
+    transform 320ms cubic-bezier(0.22, 1, 0.36, 1),
+    width 320ms cubic-bezier(0.22, 1, 0.36, 1),
+    opacity 240ms ease,
+    background-color 300ms ease;
+}
+
+.fx-fries-bar--top {
+  top: 3px;
+  width: 52%;
+}
+
+.fx-fries-bar--mid {
+  top: 50%;
+  width: 100%;
+  margin-top: -1px;
+}
+
+.fx-fries-bar--bot {
+  bottom: 3px;
+  width: 72%;
+}
+
+.fx-fries[data-open='true'] .fx-fries-bar--top {
+  top: 50%;
+  width: 100%;
+  margin-top: -1px;
+  transform: translateX(-50%) rotate(45deg);
+}
+
+.fx-fries[data-open='true'] .fx-fries-bar--mid {
+  width: 0;
+  opacity: 0;
+}
+
+.fx-fries[data-open='true'] .fx-fries-bar--bot {
+  bottom: auto;
+  top: 50%;
+  width: 100%;
+  margin-top: -1px;
+  transform: translateX(-50%) rotate(-45deg);
+}
+
+.fx-mobile-menu {
+  isolation: isolate;
+  transition:
+    opacity 320ms cubic-bezier(0.22, 1, 0.36, 1),
+    visibility 320ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.fx-mobile-menu[data-open='false'] {
+  pointer-events: none;
+  visibility: hidden;
+  opacity: 0;
+}
+
+.fx-mobile-menu[data-open='true'] {
+  pointer-events: auto;
+  visibility: visible;
+  opacity: 1;
+}
+
+.fx-mobile-menu-inner {
+  transition: transform 360ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.fx-mobile-menu[data-open='false'] .fx-mobile-menu-inner {
+  transform: translateY(12px);
+}
+
+.fx-mobile-menu[data-open='true'] .fx-mobile-menu-inner {
+  transform: translateY(0);
+}
+
+.fx-mobile-menu-cta {
+  transition:
+    opacity 360ms cubic-bezier(0.22, 1, 0.36, 1),
+    transform 360ms cubic-bezier(0.22, 1, 0.36, 1);
+  transition-delay: 70ms;
+}
+
+.fx-mobile-menu[data-open='false'] .fx-mobile-menu-cta {
+  opacity: 0;
+  transform: translateY(10px);
+}
+
+.fx-mobile-menu[data-open='true'] .fx-mobile-menu-cta {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.fx-loading-screen {
+  background: var(--background);
+}
+
+.dark .fx-loading-screen {
+  background: var(--background);
+}
+
+.fx-loader {
+  background: transparent;
+}
+
+/* Editorial hero mark — settle transforms when motion is reduced */
+@media (prefers-reduced-motion: reduce) {
+  .hero-mark-fill {
+    transform: rotate(-1.4deg) skewX(-2deg) scaleX(1) !important;
+    opacity: 1 !important;
+  }
+}
+
+.fx-loader-pulse {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.fx-loader-spin {
+  transform-origin: center;
+}
+
+.fx-loader-track,
+.fx-loader-progress,
+.fx-loader-accent {
+  fill: none;
+  stroke-width: 4.5;
+}
+
+.fx-loader-track {
+  stroke: rgb(37 99 235 / 0.14);
+}
+
+.dark .fx-loader-track {
+  stroke: rgb(37 99 235 / 0.22);
+}
+
+.fx-loader-progress {
+  stroke: var(--color-brand-blue);
+  stroke-linecap: round;
+  stroke-dasharray: 40 211;
+  transform-origin: 50px 50px;
+  animation: loader-stroke 2.2s ease-in-out infinite;
+}
+
+.fx-loader-accent {
+  stroke: var(--color-brand-yellow);
+  stroke-linecap: round;
+  stroke-dasharray: 14 237;
+  stroke-dashoffset: -28;
+  transform-origin: 50px 50px;
+  opacity: 0.95;
+  animation: loader-accent 2.2s ease-in-out infinite;
+}
+
+.fx-loader-dots {
+  display: inline-block;
+  width: 1.25em;
+  text-align: left;
+}
+
+.fx-loader-dots::after {
+  content: '';
+  animation: loader-dots 1.6s steps(4, end) infinite;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .fx-shimmer-text,
   .fx-grain,
@@ -741,6 +982,36 @@
     transform: none !important;
     color: inherit;
     background: none;
+  }
+
+  .fx-loader-progress,
+  .fx-loader-accent,
+  .fx-loader-dots::after {
+    animation: none !important;
+  }
+
+  .fx-loader-progress {
+    stroke-dasharray: 80 171;
+    stroke-dashoffset: -40;
+  }
+
+  .fx-loader-accent {
+    stroke-dasharray: 14 237;
+    stroke-dashoffset: -100;
+  }
+
+  .fx-loader-dots::after {
+    content: '';
+  }
+
+  .fx-fries-bar {
+    transition: none !important;
+  }
+
+  .fx-mobile-menu,
+  .fx-mobile-menu-inner,
+  .fx-mobile-menu-cta {
+    transition: none !important;
   }
 
   .fx-side-dot,

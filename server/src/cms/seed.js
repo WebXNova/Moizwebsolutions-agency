@@ -27,17 +27,8 @@ function ensureMissingSettings(db) {
  * @param {import('better-sqlite3').Database} db
  */
 export function seedCmsContent(db) {
-  ensureMissingSettings(db);
-  const settingsCount = db.prepare('SELECT COUNT(*) AS count FROM site_settings').get().count;
-  if (settingsCount === 0) {
-    const insertSetting = db.prepare(
-      'INSERT INTO site_settings (key, value) VALUES (?, ?)',
-    );
-    insertSetting.run('hero', JSON.stringify(defaultHero));
-    for (const [key, value] of Object.entries(defaultSiteSettings)) {
-      insertSetting.run(key, JSON.stringify(value));
-    }
-  }
+  const seedAll = db.transaction(() => {
+    ensureMissingSettings(db);
 
   const servicesCount = db.prepare('SELECT COUNT(*) AS count FROM services').get().count;
   if (servicesCount === 0) {
@@ -171,6 +162,24 @@ export function seedCmsContent(db) {
         link.displayOrder,
       );
     }
+  } else {
+    // Keep seeded profiles current when rows still hold bare placeholder domains.
+    const updateHref = db.prepare(`
+      UPDATE social_links
+      SET href = ?
+      WHERE platform = ?
+        AND (
+          href = 'https://facebook.com/'
+          OR href = 'https://instagram.com/'
+          OR href = 'https://linkedin.com/'
+          OR href = 'https://www.facebook.com/'
+          OR href = 'https://www.instagram.com/'
+          OR href = 'https://www.linkedin.com/'
+        )
+    `);
+    for (const link of defaultSocialLinks) {
+      updateHref.run(link.href, link.platform);
+    }
   }
 
   const navCount = db.prepare('SELECT COUNT(*) AS count FROM navigation_items').get().count;
@@ -189,6 +198,8 @@ export function seedCmsContent(db) {
       insert.run(randomUUID(), item.label, item.href, 1, item.isSystem, item.displayOrder);
     }
   }
+  });
+  seedAll();
 }
 
 /**

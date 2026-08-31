@@ -1,3 +1,7 @@
+/**
+ * Legacy static archive page. Not mounted in App.jsx.
+ * Public work is served from Portfolio + CMS projects, not this file.
+ */
 import { Header } from '@/components/layout/Header';
 import { Footer } from '@/components/layout/Footer';
 import { Container, Section, SectionHeading } from '@/components/common';

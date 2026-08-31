@@ -91,7 +91,22 @@ export function AdminHero() {
                 className={inputClass}
                 value={hero?.cta?.url || ''}
                 onChange={(e) => update('cta', { ...hero?.cta, url: e.target.value })}
-                placeholder="https://"
+                placeholder="Leave blank to open the inquiry form"
+              />
+            </FormField>
+            <FormField label="Secondary CTA text">
+              <input
+                className={inputClass}
+                value={hero?.secondaryCta?.label || ''}
+                onChange={(e) => update('secondaryCta', { ...hero?.secondaryCta, label: e.target.value })}
+                placeholder="Shown only when set"
+              />
+            </FormField>
+            <FormField label="Secondary CTA URL">
+              <input
+                className={inputClass}
+                value={hero?.secondaryCta?.url || ''}
+                onChange={(e) => update('secondaryCta', { ...hero?.secondaryCta, url: e.target.value })}
               />
             </FormField>
             <FormField label="Badge / label">

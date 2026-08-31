@@ -17,17 +17,18 @@ export function TechnologyMark({ technology, className }) {
     <img
       src={technology.logo}
       alt=""
-      width={technology.width ?? 40}
-      height={technology.height ?? 32}
+      aria-hidden="true"
+      width={technology.width ?? 64}
+      height={technology.height ?? 56}
       loading="lazy"
       decoding="async"
       className={cn(
-        'h-7 w-auto max-w-[4.75rem] object-contain object-center',
-        'sm:h-8 sm:max-w-[5.25rem] lg:h-9 lg:max-w-[6.25rem]',
-        'opacity-[0.82] transition-opacity duration-300 ease-out',
+        'h-11 w-auto max-w-[5.75rem] object-contain object-center',
+        'sm:h-[3.25rem] sm:max-w-[6.75rem] lg:h-16 lg:max-w-[7.75rem]',
+        'opacity-[0.9] transition-[opacity,filter] duration-300 ease-out',
         'group-hover:opacity-100 group-focus-visible:opacity-100',
         technology.invertOnDark &&
-          'dark:invert dark:opacity-70 dark:group-hover:opacity-100 dark:group-focus-visible:opacity-100',
+          'dark:invert dark:opacity-80 dark:group-hover:opacity-100 dark:group-focus-visible:opacity-100',
         className,
       )}
     />

@@ -1,36 +1,118 @@
-import { useEffect } from 'react';
+import { useEffect, useId, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { Container } from '@/components/common/Container';
 import { IconButton } from '@/components/common/IconButton';
+import { ThemeToggle } from '@/components/common/ThemeToggle';
 import { Logo } from '@/components/navigation/Logo';
+import { FriesMenuIcon } from '@/components/navigation/FriesMenuIcon';
 import { Navigation } from '@/components/navigation/Navigation';
 import { SocialLinks } from '@/components/navigation/SocialLinks';
-import { CloseIcon } from '@/lib/icons';
+import { HeroCTA } from '@/components/hero/HeroCTA';
+import { useInquiry } from '@/context/InquiryProvider';
 import { useOverlay } from '@/hooks/useOverlay';
+import { usePrefersReducedMotion } from '@/hooks/usePrefersReducedMotion';
+import { useSiteContent } from '@/hooks/useSiteContent';
+import { resolveHero } from '@/lib/contentAdapters';
+import { heroContent as fallbackHero } from '@/data/hero';
+import { cn } from '@/lib/cn';
 
 const DIALOG_ID = 'mobile-navigation';
+const EXIT_MS = 360;
+const SITE_SHELL = '[data-site-shell]';
 
 /**
+ * Full-viewport mobile/tablet nav. Portaled to document.body so it is not
+ * trapped by header backdrop-filter or the page shell’s overflow/stacking context.
+ *
  * @param {{ isOpen?: boolean; onClose?: () => void }} props
  */
 export function MobileMenu({ isOpen = false, onClose }) {
-  useOverlay({ isOpen, onClose });
+  const reduced = usePrefersReducedMotion();
+  const titleId = useId();
+  const closeRef = useRef(null);
+  const wasMountedRef = useRef(false);
+  const [mounted, setMounted] = useState(false);
+  const [entered, setEntered] = useState(false);
+  const { open: openInquiry } = useInquiry();
+  const { content } = useSiteContent();
+  const heroContent = resolveHero(content?.hero) || fallbackHero;
+  const talkLabel = heroContent.cta?.label || 'Let\u2019s talk';
+
+  useOverlay({ isOpen, onClose, lockScroll: mounted });
+
+  useEffect(() => {
+    if (isOpen) {
+      wasMountedRef.current = true;
+      setMounted(true);
+      const outer = window.requestAnimationFrame(() => {
+        window.requestAnimationFrame(() => setEntered(true));
+      });
+      return () => window.cancelAnimationFrame(outer);
+    }
+
+    setEntered(false);
+
+    if (!wasMountedRef.current) return undefined;
+
+    if (reduced) {
+      wasMountedRef.current = false;
+      setMounted(false);
+      return undefined;
+    }
+
+    const timer = window.setTimeout(() => {
+      wasMountedRef.current = false;
+      setMounted(false);
+    }, EXIT_MS);
+    return () => window.clearTimeout(timer);
+  }, [isOpen, reduced]);
+
+  useEffect(() => {
+    const shell = document.querySelector(SITE_SHELL);
+    if (!(shell instanceof HTMLElement)) return undefined;
+
+    if (isOpen) {
+      shell.setAttribute('inert', '');
+      shell.setAttribute('aria-hidden', 'true');
+    } else {
+      shell.removeAttribute('inert');
+      shell.removeAttribute('aria-hidden');
+    }
+
+    return () => {
+      shell.removeAttribute('inert');
+      shell.removeAttribute('aria-hidden');
+    };
+  }, [isOpen]);
+
+  useEffect(() => {
+    if (!isOpen || !entered) return undefined;
+    closeRef.current?.focus();
+    return undefined;
+  }, [isOpen, entered]);
 
   useEffect(() => {
     if (!isOpen) return undefined;
 
     const desktopQuery = window.matchMedia('(min-width: 1024px)');
-
     const handleDesktopChange = (event) => {
       if (event.matches) onClose?.();
     };
 
+    desktopQuery.addEventListener('change', handleDesktopChange);
+    return () => desktopQuery.removeEventListener('change', handleDesktopChange);
+  }, [isOpen, onClose]);
+
+  useEffect(() => {
+    if (!isOpen || !mounted) return undefined;
+
     const handleTab = (event) => {
       if (event.key !== 'Tab') return;
 
-      const focusable = document
-        .getElementById(DIALOG_ID)
-        ?.querySelectorAll('a[href], button:not([disabled])');
-
+      const root = document.getElementById(DIALOG_ID);
+      const focusable = root?.querySelectorAll(
+        'a[href], button:not([disabled]), [tabindex]:not([tabindex="-1"])',
+      );
       if (!focusable?.length) return;
 
       const first = focusable[0];
@@ -45,39 +127,66 @@ export function MobileMenu({ isOpen = false, onClose }) {
       }
     };
 
-    desktopQuery.addEventListener('change', handleDesktopChange);
     document.addEventListener('keydown', handleTab);
+    return () => document.removeEventListener('keydown', handleTab);
+  }, [isOpen, mounted]);
 
-    return () => {
-      desktopQuery.removeEventListener('change', handleDesktopChange);
-      document.removeEventListener('keydown', handleTab);
-    };
-  }, [isOpen, onClose]);
+  const handleTalkClick = () => {
+    onClose?.();
+    // Inquiry modal is z-90; wait for this z-100 overlay to exit so it is not covered.
+    window.setTimeout(() => openInquiry(), reduced ? 0 : EXIT_MS);
+  };
 
-  if (!isOpen) return null;
+  if (!mounted || typeof document === 'undefined') return null;
 
-  return (
+  return createPortal(
     <div
       id={DIALOG_ID}
-      className="fixed inset-0 z-[70] bg-background lg:hidden"
+      className={cn(
+        'fx-mobile-menu fixed inset-0 z-[100] lg:hidden',
+        'flex flex-col bg-background',
+      )}
+      data-open={entered ? 'true' : 'false'}
       role="dialog"
       aria-modal="true"
-      aria-label="Site navigation"
+      aria-labelledby={titleId}
     >
-      <Container className="flex h-full flex-col">
-        <div className="flex items-center justify-between py-7">
+      <div aria-hidden="true" className="pointer-events-none absolute inset-0 bg-background" />
+
+      <Container className="fx-mobile-menu-inner relative z-[1] flex h-full min-h-0 flex-col">
+        <div className="flex items-center justify-between gap-4 py-4 sm:py-5 md:py-6">
           <Logo />
-          <IconButton autoFocus className="-mr-2" label="Close menu" onClick={onClose}>
-            <CloseIcon className="h-5 w-5" />
-          </IconButton>
+          <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
+            <ThemeToggle />
+            <IconButton
+              ref={closeRef}
+              className="h-11 w-11 -mr-1.5 text-brand-blue"
+              label="Close menu"
+              aria-controls={DIALOG_ID}
+              aria-expanded={isOpen}
+              onClick={onClose}
+            >
+              <FriesMenuIcon open />
+            </IconButton>
+          </div>
         </div>
 
-        <Navigation orientation="vertical" size="lg" className="mt-10 flex-1" onNavigate={onClose} />
+        <p id={titleId} className="sr-only">
+          Site navigation
+        </p>
 
-        <div className="flex items-center justify-between pb-12">
-          <SocialLinks />
+        <div className="flex min-h-0 flex-1 flex-col overflow-y-auto">
+          <Navigation orientation="vertical" size="lg" className="mt-10" onNavigate={onClose} />
+
+          <div className="fx-mobile-menu-cta mt-auto flex flex-col items-stretch gap-8 pb-12 pt-12 sm:items-start">
+            <SocialLinks />
+            <HeroCTA onClick={handleTalkClick} className="mt-0 w-full max-w-full sm:w-auto">
+              {talkLabel}
+            </HeroCTA>
+          </div>
         </div>
       </Container>
-    </div>
+    </div>,
+    document.body,
   );
 }

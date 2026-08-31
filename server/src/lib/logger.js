@@ -10,7 +10,7 @@ import { env } from '../config/env.js';
 
 function redactSecrets(value) {
   let text = String(value ?? '');
-  for (const secret of [env.smtp.pass, env.smtp.user]) {
+  for (const secret of [env.smtp.pass, env.smtp.user, env.jwt.secret, env.admin.password]) {
     if (secret && secret.length >= 3) text = text.split(secret).join('[redacted]');
   }
   return text;

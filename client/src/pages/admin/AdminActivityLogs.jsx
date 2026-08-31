@@ -9,12 +9,19 @@ export function AdminActivityLogs() {
   const { showToast } = useToast();
   const [logs, setLogs] = useState([]);
   const [pagination, setPagination] = useState({ page: 1, limit: 50, total: 0 });
+  const [action, setAction] = useState('');
+  const [resourceType, setResourceType] = useState('');
   const [loading, setLoading] = useState(true);
 
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      const result = await cmsService.getActivityLogs({ page: pagination.page, limit: pagination.limit });
+      const result = await cmsService.getActivityLogs({
+        page: pagination.page,
+        limit: pagination.limit,
+        action,
+        resourceType,
+      });
       setLogs(result.logs);
       setPagination((p) => ({ ...p, total: result.pagination.total }));
     } catch (err) {
@@ -22,7 +29,7 @@ export function AdminActivityLogs() {
     } finally {
       setLoading(false);
     }
-  }, [pagination.page, pagination.limit, showToast]);
+  }, [pagination.page, pagination.limit, action, resourceType, showToast]);
 
   useEffect(() => {
     load();
@@ -34,7 +41,31 @@ export function AdminActivityLogs() {
     <>
       <AdminHeader title="Activity Logs" breadcrumb="Admin" />
       <div className="space-y-6 p-4 sm:p-6 lg:p-8">
-        <AdminPanel title="Recent Activity">
+        <AdminPanel
+          title="Recent Activity"
+          actions={
+            <div className="flex flex-wrap gap-2">
+              <input
+                className="rounded-lg border border-border-subtle bg-surface px-3 py-2 text-[12px]"
+                placeholder="Action"
+                value={action}
+                onChange={(e) => {
+                  setPagination((p) => ({ ...p, page: 1 }));
+                  setAction(e.target.value);
+                }}
+              />
+              <input
+                className="rounded-lg border border-border-subtle bg-surface px-3 py-2 text-[12px]"
+                placeholder="Resource type"
+                value={resourceType}
+                onChange={(e) => {
+                  setPagination((p) => ({ ...p, page: 1 }));
+                  setResourceType(e.target.value);
+                }}
+              />
+            </div>
+          }
+        >
           {loading ? (
             <div className="flex justify-center py-12">
               <SpinnerIcon className="h-8 w-8 animate-spin text-muted-foreground" />
