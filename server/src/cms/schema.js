@@ -1,5 +1,15 @@
-/** @param {import('better-sqlite3').Database} db */
+/** @param {import('better-sqlite3').Database | import('../db/mysql.js').MysqlDatabase} db */
 export function initializeCmsSchema(db) {
+  if (db.dialect === 'mysql') {
+    initializeMysqlCmsSchema(db);
+  } else {
+    initializeSqliteCmsSchema(db);
+  }
+  migrateProjectColumns(db);
+  migrateAdminUserColumns(db);
+}
+
+function initializeSqliteCmsSchema(db) {
   db.exec(`
     CREATE TABLE IF NOT EXISTS site_settings (
       key TEXT PRIMARY KEY,
@@ -179,14 +189,192 @@ export function initializeCmsSchema(db) {
     CREATE INDEX IF NOT EXISTS idx_inquiries_status ON inquiries(status);
     CREATE INDEX IF NOT EXISTS idx_inquiries_email ON inquiries(email);
   `);
-
-  migrateProjectColumns(db);
-  migrateAdminUserColumns(db);
 }
 
-/** @param {import('better-sqlite3').Database} db */
+function initializeMysqlCmsSchema(db) {
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS site_settings (
+      \`key\` VARCHAR(64) PRIMARY KEY,
+      value LONGTEXT NOT NULL DEFAULT ('{}'),
+      updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+    CREATE TABLE IF NOT EXISTS services (
+      id VARCHAR(36) PRIMARY KEY,
+      slug VARCHAR(191) NOT NULL UNIQUE,
+      icon VARCHAR(64) NOT NULL DEFAULT 'design',
+      label VARCHAR(255) NOT NULL,
+      title VARCHAR(255) NOT NULL,
+      description TEXT NOT NULL DEFAULT (''),
+      details_json LONGTEXT NOT NULL DEFAULT ('[]'),
+      cta_text VARCHAR(255) NOT NULL DEFAULT '',
+      cta_url TEXT NOT NULL DEFAULT (''),
+      category_label VARCHAR(255) NOT NULL DEFAULT '',
+      active TINYINT(1) NOT NULL DEFAULT 1,
+      featured TINYINT(1) NOT NULL DEFAULT 0,
+      display_order INT NOT NULL DEFAULT 0,
+      created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+      KEY idx_services_order (display_order)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+    CREATE TABLE IF NOT EXISTS testimonials (
+      id VARCHAR(36) PRIMARY KEY,
+      quote TEXT NOT NULL,
+      author VARCHAR(255) NOT NULL,
+      role VARCHAR(255) NOT NULL DEFAULT '',
+      company VARCHAR(255) NOT NULL DEFAULT '',
+      avatar_url TEXT NOT NULL DEFAULT (''),
+      verified TINYINT(1) NOT NULL DEFAULT 0,
+      featured TINYINT(1) NOT NULL DEFAULT 0,
+      published TINYINT(1) NOT NULL DEFAULT 1,
+      display_order INT NOT NULL DEFAULT 0,
+      created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+      KEY idx_testimonials_order (display_order)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+    CREATE TABLE IF NOT EXISTS trusted_companies (
+      id VARCHAR(36) PRIMARY KEY,
+      name VARCHAR(255) NOT NULL,
+      logo_url TEXT NOT NULL DEFAULT (''),
+      website_url TEXT NOT NULL DEFAULT (''),
+      logo_alt VARCHAR(255) NOT NULL DEFAULT '',
+      active TINYINT(1) NOT NULL DEFAULT 1,
+      display_order INT NOT NULL DEFAULT 0,
+      created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+      KEY idx_trusted_companies_order (display_order)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+    CREATE TABLE IF NOT EXISTS technologies (
+      id VARCHAR(36) PRIMARY KEY,
+      slug VARCHAR(191) NOT NULL UNIQUE,
+      name VARCHAR(255) NOT NULL,
+      category VARCHAR(255) NOT NULL DEFAULT '',
+      logo_url TEXT NOT NULL DEFAULT (''),
+      color VARCHAR(64) NOT NULL DEFAULT '',
+      invert_on_dark TINYINT(1) NOT NULL DEFAULT 0,
+      active TINYINT(1) NOT NULL DEFAULT 1,
+      featured TINYINT(1) NOT NULL DEFAULT 0,
+      display_order INT NOT NULL DEFAULT 0,
+      created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+      KEY idx_technologies_order (display_order)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+    CREATE TABLE IF NOT EXISTS process_steps (
+      id VARCHAR(36) PRIMARY KEY,
+      step_number INT NOT NULL DEFAULT 1,
+      title VARCHAR(255) NOT NULL,
+      description TEXT NOT NULL DEFAULT (''),
+      icon VARCHAR(64) NOT NULL DEFAULT 'discovery',
+      active TINYINT(1) NOT NULL DEFAULT 1,
+      display_order INT NOT NULL DEFAULT 0,
+      created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+      KEY idx_process_steps_order (display_order)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+    CREATE TABLE IF NOT EXISTS website_updates (
+      id VARCHAR(36) PRIMARY KEY,
+      title VARCHAR(255) NOT NULL,
+      short_description TEXT NOT NULL DEFAULT (''),
+      full_description LONGTEXT NOT NULL DEFAULT (''),
+      image_url TEXT NOT NULL DEFAULT (''),
+      category VARCHAR(64) NOT NULL DEFAULT 'announcement',
+      cta_text VARCHAR(255) NOT NULL DEFAULT '',
+      cta_url TEXT NOT NULL DEFAULT (''),
+      published TINYINT(1) NOT NULL DEFAULT 0,
+      featured TINYINT(1) NOT NULL DEFAULT 0,
+      start_date DATETIME NULL,
+      end_date DATETIME NULL,
+      display_order INT NOT NULL DEFAULT 0,
+      created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+      KEY idx_website_updates_order (display_order)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+    CREATE TABLE IF NOT EXISTS social_links (
+      id VARCHAR(36) PRIMARY KEY,
+      platform VARCHAR(64) NOT NULL,
+      href TEXT NOT NULL DEFAULT (''),
+      label VARCHAR(255) NOT NULL DEFAULT '',
+      icon VARCHAR(64) NOT NULL DEFAULT '',
+      active TINYINT(1) NOT NULL DEFAULT 1,
+      display_order INT NOT NULL DEFAULT 0,
+      created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+    CREATE TABLE IF NOT EXISTS navigation_items (
+      id VARCHAR(36) PRIMARY KEY,
+      label VARCHAR(255) NOT NULL,
+      href VARCHAR(255) NOT NULL,
+      active TINYINT(1) NOT NULL DEFAULT 1,
+      is_system TINYINT(1) NOT NULL DEFAULT 0,
+      display_order INT NOT NULL DEFAULT 0,
+      created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+    CREATE TABLE IF NOT EXISTS media (
+      id VARCHAR(36) PRIMARY KEY,
+      filename VARCHAR(255) NOT NULL,
+      url TEXT NOT NULL,
+      mime_type VARCHAR(128) NOT NULL DEFAULT '',
+      size_bytes INT NOT NULL DEFAULT 0,
+      alt_text VARCHAR(255) NOT NULL DEFAULT '',
+      created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      KEY idx_media_created (created_at)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+    CREATE TABLE IF NOT EXISTS activity_logs (
+      id VARCHAR(36) PRIMARY KEY,
+      admin_id VARCHAR(36) NULL,
+      admin_email VARCHAR(191) NOT NULL DEFAULT '',
+      action VARCHAR(64) NOT NULL,
+      resource_type VARCHAR(64) NOT NULL DEFAULT '',
+      resource_id VARCHAR(36) NULL,
+      details TEXT NOT NULL DEFAULT (''),
+      ip VARCHAR(64) NOT NULL DEFAULT '',
+      success TINYINT(1) NOT NULL DEFAULT 1,
+      created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      KEY idx_activity_logs_created (created_at),
+      KEY idx_activity_logs_action (action),
+      KEY idx_activity_logs_resource (resource_type)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+    CREATE TABLE IF NOT EXISTS inquiries (
+      id VARCHAR(64) PRIMARY KEY,
+      name VARCHAR(255) NOT NULL,
+      email VARCHAR(191) NOT NULL,
+      phone VARCHAR(64) NOT NULL DEFAULT '',
+      business VARCHAR(255) NOT NULL DEFAULT '',
+      website TEXT NOT NULL DEFAULT (''),
+      social TEXT NOT NULL DEFAULT (''),
+      services_json LONGTEXT NOT NULL DEFAULT ('[]'),
+      project_types_json LONGTEXT NOT NULL DEFAULT ('[]'),
+      description LONGTEXT NOT NULL DEFAULT (''),
+      budget_currency VARCHAR(16) NOT NULL DEFAULT '',
+      budget_label VARCHAR(255) NOT NULL DEFAULT '',
+      timeline VARCHAR(255) NOT NULL DEFAULT '',
+      status VARCHAR(32) NOT NULL DEFAULT 'new',
+      email_status VARCHAR(32) NOT NULL DEFAULT 'pending',
+      confirmation_sent TINYINT(1) NOT NULL DEFAULT 0,
+      notes TEXT NOT NULL DEFAULT (''),
+      created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+      KEY idx_inquiries_created (created_at),
+      KEY idx_inquiries_status (status),
+      KEY idx_inquiries_email (email)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+  `);
+}
+
+/** @param {import('better-sqlite3').Database | import('../db/mysql.js').MysqlDatabase} db */
 function migrateProjectColumns(db) {
-  const columns = db.prepare('PRAGMA table_info(projects)').all().map((c) => c.name);
+  const columns = listColumns(db, 'projects');
   const additions = [
     ['published', 'INTEGER NOT NULL DEFAULT 1'],
     ['client', "TEXT NOT NULL DEFAULT ''"],
@@ -204,9 +392,21 @@ function migrateProjectColumns(db) {
   }
 }
 
-/** @param {import('better-sqlite3').Database} db */
+function listColumns(db, table) {
+  if (db.dialect === 'mysql') {
+    return db
+      .prepare(
+        'SELECT COLUMN_NAME AS name FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = ?',
+      )
+      .all(table)
+      .map((column) => column.name);
+  }
+  return db.prepare(`PRAGMA table_info(${table})`).all().map((column) => column.name);
+}
+
+/** @param {import('better-sqlite3').Database | import('../db/mysql.js').MysqlDatabase} db */
 function migrateAdminUserColumns(db) {
-  const columns = db.prepare('PRAGMA table_info(admin_users)').all().map((c) => c.name);
+  const columns = listColumns(db, 'admin_users');
   const additions = [
     ['name', "TEXT NOT NULL DEFAULT ''"],
     ['role', "TEXT NOT NULL DEFAULT 'super_admin'"],

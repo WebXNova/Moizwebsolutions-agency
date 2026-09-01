@@ -102,8 +102,14 @@ export function collectStartupProblems() {
     }
   }
 
-  const dbLocation = isUnsafeDbLocation(env.db.path);
-  if (dbLocation) problems.push(dbLocation);
+  if (env.db.host) {
+    if (!env.db.name) problems.push('DB_NAME is not set');
+    if (!env.db.user) problems.push('DB_USER is not set');
+    if (env.db.port < 1 || env.db.port > 65535) problems.push('DB_PORT is not a valid TCP port');
+  } else {
+    const dbLocation = isUnsafeDbLocation(env.db.path);
+    if (dbLocation) problems.push(dbLocation);
+  }
 
   if (isPathInside(env.backup.dir, env.uploads.dir)) {
     problems.push('BACKUP_DIR cannot be inside the uploads directory');
@@ -113,7 +119,9 @@ export function collectStartupProblems() {
 }
 
 export function ensureRuntimeDirectories() {
-  fs.mkdirSync(path.dirname(env.db.path), { recursive: true });
+  if (!env.db.host) {
+    fs.mkdirSync(path.dirname(env.db.path), { recursive: true });
+  }
   fs.mkdirSync(env.uploads.dir, { recursive: true });
   fs.mkdirSync(path.join(env.uploads.dir, 'media'), { recursive: true });
   fs.mkdirSync(env.backup.dir, { recursive: true });

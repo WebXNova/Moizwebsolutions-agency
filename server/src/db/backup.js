@@ -28,6 +28,16 @@ function assertBackupDestination(resolvedDest) {
  * @param {string} filePath
  */
 export function verifyBackupFile(filePath) {
+  if (filePath.endsWith('.sql')) {
+    const bytes = fs.statSync(filePath).size;
+    if (bytes < 1) throw new Error('Backup file is empty.');
+    const sample = fs.readFileSync(filePath, 'utf8').slice(0, 200);
+    if (!/CREATE TABLE|INSERT INTO/i.test(sample)) {
+      throw new Error('Backup file has no application tables.');
+    }
+    return;
+  }
+
   const probe = new Database(filePath, { readonly: true, fileMustExist: true });
   try {
     probe.prepare('SELECT 1 AS ok').get();
@@ -42,8 +52,41 @@ export function verifyBackupFile(filePath) {
   }
 }
 
+function escapeSqlString(value) {
+  if (value === null || value === undefined) return 'NULL';
+  if (typeof value === 'number' && Number.isFinite(value)) return String(value);
+  if (typeof value === 'bigint') return String(value);
+  return `'${String(value).replace(/\\/g, '\\\\').replace(/'/g, "''")}'`;
+}
+
+function backupMysql(destPath) {
+  const db = getDb();
+  const tables = db
+    .prepare(
+      "SELECT TABLE_NAME AS name FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = DATABASE() AND TABLE_TYPE = 'BASE TABLE' ORDER BY TABLE_NAME",
+    )
+    .all();
+
+  const chunks = [`-- Moiz Web Solutions MySQL dump\n-- ${new Date().toISOString()}\nSET FOREIGN_KEY_CHECKS=0;\n`];
+  for (const { name } of tables) {
+    const createRows = db.prepare(`SHOW CREATE TABLE \`${name}\``).all();
+    const createSql = createRows[0]?.['Create Table'] || createRows[0]?.['Create View'];
+    if (createSql) {
+      chunks.push(`DROP TABLE IF EXISTS \`${name}\`;\n${createSql};\n`);
+    }
+    const rows = db.prepare(`SELECT * FROM \`${name}\``).all();
+    for (const row of rows) {
+      const columns = Object.keys(row).map((column) => `\`${column}\``).join(', ');
+      const values = Object.values(row).map(escapeSqlString).join(', ');
+      chunks.push(`INSERT INTO \`${name}\` (${columns}) VALUES (${values});\n`);
+    }
+  }
+  chunks.push('SET FOREIGN_KEY_CHECKS=1;\n');
+  fs.writeFileSync(destPath, chunks.join('\n'), 'utf8');
+}
+
 /**
- * SQLite-safe snapshot via better-sqlite3 backup(), not a live file copy.
+ * Snapshot via SQLite backup() or a MySQL SQL dump.
  *
  * @param {string} [destPath]
  * @returns {Promise<string>}
@@ -52,13 +95,18 @@ export async function backupDatabase(destPath) {
   const dir = env.backup.dir;
   fs.mkdirSync(dir, { recursive: true });
 
+  const db = getDb();
   const stamp = new Date().toISOString().replace(/[:.]/g, '-');
-  const destination = destPath || path.join(dir, `portfolio-${stamp}.db`);
+  const ext = db.dialect === 'mysql' ? 'sql' : 'db';
+  const destination = destPath || path.join(dir, `portfolio-${stamp}.${ext}`);
   const resolvedDest = path.resolve(destination);
   assertBackupDestination(resolvedDest);
 
-  const db = getDb();
-  await db.backup(resolvedDest);
+  if (db.dialect === 'mysql') {
+    backupMysql(resolvedDest);
+  } else {
+    await db.backup(resolvedDest);
+  }
   verifyBackupFile(resolvedDest);
   logger.info('db.backup_written', { file: path.basename(resolvedDest), bytes: fs.statSync(resolvedDest).size });
   return resolvedDest;
@@ -93,7 +141,7 @@ export async function createSnapshot() {
   assertBackupDestination(dir);
   fs.mkdirSync(dir, { recursive: true });
 
-  const dbFile = path.join(dir, 'portfolio.db');
+  const dbFile = path.join(dir, getDb().dialect === 'mysql' ? 'portfolio.sql' : 'portfolio.db');
   await backupDatabase(dbFile);
 
   const mediaDir = path.join(dir, 'media');
@@ -101,10 +149,12 @@ export async function createSnapshot() {
 
   const manifest = {
     createdAt: new Date().toISOString(),
-    dbFile: 'portfolio.db',
+    dbFile: path.basename(dbFile),
     mediaCopied: media.copied,
     mediaFiles: media.files,
-    note: 'SQLite backup is consistent. Media is a filesystem copy from approximately the same moment, not a two-phase commit.',
+    note: getDb().dialect === 'mysql'
+      ? 'MySQL dump is a point-in-time SQL export. Media is a filesystem copy from approximately the same moment.'
+      : 'SQLite backup is consistent. Media is a filesystem copy from approximately the same moment, not a two-phase commit.',
   };
   fs.writeFileSync(path.join(dir, 'manifest.json'), JSON.stringify(manifest, null, 2));
   logger.info('backup.snapshot_complete', {
@@ -188,13 +238,21 @@ const EXPECTED_TABLES = [
  * @param {import('better-sqlite3').Database} [db]
  */
 export function inspectSchema(db = getDb()) {
-  const tables = db
-    .prepare("SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%'")
-    .all()
-    .map((row) => row.name);
+  const tables =
+    db.dialect === 'mysql'
+      ? db
+          .prepare(
+            'SELECT TABLE_NAME AS name FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = DATABASE()',
+          )
+          .all()
+          .map((row) => row.name)
+      : db
+          .prepare("SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%'")
+          .all()
+          .map((row) => row.name);
   const missingTables = EXPECTED_TABLES.filter((name) => !tables.includes(name));
-  const foreignKeys = db.pragma('foreign_keys', { simple: true });
-  const journalMode = db.pragma('journal_mode', { simple: true });
+  const foreignKeys = db.dialect === 'mysql' ? 1 : db.pragma('foreign_keys', { simple: true });
+  const journalMode = db.dialect === 'mysql' ? 'innodb' : db.pragma('journal_mode', { simple: true });
   return {
     ok: missingTables.length === 0 && Number(foreignKeys) === 1,
     tableCount: tables.length,

@@ -7,6 +7,7 @@ import { renderClientConfirmationEmail } from '../email/templates/clientConfirma
 import { createInquiryId, formatSubmittedAt } from '../inquiry/inquiryId.js';
 import { normalizeInquiry } from '../inquiry/normalizeInquiry.js';
 import { insertInquiry, updateInquiryEmailStatus } from '../inquiry/store.js';
+import { isDuplicateKeyError } from '../lib/dbErrors.js';
 import { describeError, logger } from '../lib/logger.js';
 import { createRateLimiter } from '../lib/rateLimit.js';
 
@@ -24,7 +25,7 @@ function persistInquiry(db, inquiry, submittedAt) {
     insertInquiry(db, { id: inquiryId, inquiry, emailStatus: 'pending', confirmationSent: false });
     return inquiryId;
   } catch (error) {
-    if (typeof error?.code === 'string' && error.code.startsWith('SQLITE_CONSTRAINT')) {
+    if (isDuplicateKeyError(error)) {
       inquiryId = createInquiryId(submittedAt, env.mail.timezone);
       insertInquiry(db, { id: inquiryId, inquiry, emailStatus: 'pending', confirmationSent: false });
       return inquiryId;

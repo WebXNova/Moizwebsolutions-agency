@@ -115,6 +115,11 @@ export const env = {
   },
 
   db: {
+    host: read('DB_HOST'),
+    port: readInt('DB_PORT', 3306),
+    name: read('DB_NAME'),
+    user: read('DB_USER'),
+    password: read('DB_PASSWORD'),
     path: read('DB_PATH', path.join(serverRoot, 'data', 'portfolio.db')),
   },
 
