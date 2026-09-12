@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 900" width="1200" height="900" role="img">
+  <title>E-commerce storefront interface</title>
+  <rect width="1200" height="900" fill="#e6e4e0" />
+  <rect x="120" y="132" width="960" height="636" fill="#f7f7f6" />
+  <rect x="120" y="132" width="960" height="56" fill="#111111" opacity="0.06" />
+  <g fill="#111111" opacity="0.55">
+    <circle cx="152" cy="160" r="6" />
+    <circle cx="174" cy="160" r="6" />
+    <circle cx="196" cy="160" r="6" />
+  </g>
+  <g fill="#111111" opacity="0.1">
+    <rect x="168" y="240" width="360" height="300" />
+    <rect x="560" y="240" width="184" height="14" />
+    <rect x="560" y="276" width="292" height="14" />
+    <rect x="560" y="312" width="228" height="14" />
+  </g>
+  <rect x="560" y="382" width="176" height="46" fill="none" stroke="#111111" stroke-opacity="0.45" />
+  <g fill="#111111" opacity="0.08">
+    <rect x="168" y="592" width="212" height="146" />
+    <rect x="404" y="592" width="212" height="146" />
+    <rect x="640" y="592" width="212" height="146" />
+    <rect x="876" y="592" width="204" height="146" />
+  </g>
+  <rect x="120" y="132" width="960" height="636" fill="none" stroke="#111111" stroke-opacity="0.12" />
+</svg>

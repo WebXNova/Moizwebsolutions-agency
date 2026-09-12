@@ -1,0 +1,13 @@
+[Unit]
+Description=Moiz Web Solutions SQLite + media snapshot
+After=mws-api.service
+
+[Service]
+Type=oneshot
+User=mws
+Group=mws
+WorkingDirectory=/var/www/mws/server
+Environment=NODE_ENV=production
+EnvironmentFile=-/var/www/mws/server/.env
+ExecStart=/usr/bin/node scripts/backup-db.mjs
+Nice=10

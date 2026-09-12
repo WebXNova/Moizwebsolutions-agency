@@ -1,0 +1,35 @@
+{
+  "name": "moizwebsolutions-api",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "engines": {
+    "node": ">=20.6.0"
+  },
+  "scripts": {
+    "dev": "node --watch --env-file-if-exists=.env src/index.js",
+    "start": "node --env-file-if-exists=.env src/index.js",
+    "check:catalog": "node scripts/check-catalog-parity.mjs",
+    "verify:smtp": "node --env-file-if-exists=.env scripts/verify-smtp.mjs",
+    "test:email": "node --env-file-if-exists=.env scripts/send-test-inquiry.mjs",
+    "test:phase2": "node scripts/phase2-validate.mjs",
+    "test": "node --test --test-concurrency=1 --import ./test/setup.mjs ./test/auth.test.js ./test/projects.test.js ./test/cms.test.js ./test/inquiries.test.js ./test/ops.test.js ./test/config.test.js",
+    "backup": "node --env-file-if-exists=.env scripts/backup-db.mjs",
+    "verify:env": "node --env-file-if-exists=.env scripts/verify-env.mjs",
+    "verify:db": "node --env-file-if-exists=.env scripts/verify-db.mjs",
+    "smoke": "node scripts/smoke.mjs"
+  },
+  "dependencies": {
+    "bcryptjs": "^3.0.2",
+    "better-sqlite3": "^12.2.0",
+    "cors": "^2.8.5",
+    "express": "^5.1.0",
+    "jsonwebtoken": "^9.0.2",
+    "multer": "^2.0.2",
+    "mysql2": "^3.24.2",
+    "nodemailer": "^7.0.6"
+  },
+  "allowScripts": {
+    "better-sqlite3@12.11.1": true
+  }
+}

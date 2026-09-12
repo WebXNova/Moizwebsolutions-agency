@@ -1,0 +1,27 @@
+[Unit]
+Description=Moiz Web Solutions API
+After=network.target
+
+[Service]
+Type=simple
+User=mws
+Group=mws
+WorkingDirectory=/var/www/mws/server
+Environment=NODE_ENV=production
+EnvironmentFile=-/var/www/mws/server/.env
+ExecStart=/usr/bin/node src/index.js
+Restart=on-failure
+RestartSec=5
+TimeoutStopSec=15
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=full
+ProtectHome=true
+ReadWritePaths=/var/www/mws/server/data /var/www/mws/server/uploads /var/www/mws/server/backups
+# stdout/stderr go to the journal; rotate with journald (see deploy docs).
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=mws-api
+
+[Install]
+WantedBy=multi-user.target

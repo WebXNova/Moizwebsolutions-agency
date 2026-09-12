@@ -1,0 +1,32 @@
+# Dependencies
+node_modules
+
+# Build
+dist
+dist-ssr
+
+# Environment
+.env
+.env.*
+!.env.example
+
+# Editor
+.vscode/*
+!.vscode/extensions.json
+.idea
+
+# Generated email previews (`npm run test:email` in server/)
+.preview
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Server portfolio data
+server/data/
+server/uploads/
+server/backups/
+
+# Logs
+logs/
+*.log

@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 32" role="img" aria-label="Intercom">
+  <rect x="2" y="8" width="4" height="16" rx="2" fill="#008EFF"/>
+  <rect x="9" y="4" width="4" height="24" rx="2" fill="#008EFF"/>
+  <rect x="16" y="10" width="4" height="12" rx="2" fill="#008EFF"/>
+  <rect x="23" y="6" width="4" height="20" rx="2" fill="#008EFF"/>
+  <text x="34" y="21" fill="#fff" font-family="Inter, Arial, sans-serif" font-size="13" font-weight="700" letter-spacing="0.08em">INTERCOM</text>
+</svg>

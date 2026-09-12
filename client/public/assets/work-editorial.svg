@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 900" width="1200" height="900" role="img">
+  <title>Editorial website layout on a desktop display</title>
+  <rect width="1200" height="900" fill="#eceae6" />
+  <rect x="140" y="120" width="920" height="560" fill="#141414" />
+  <rect x="164" y="144" width="872" height="512" fill="#f6f6f5" />
+  <g fill="#111111">
+    <rect x="216" y="212" width="420" height="26" opacity="0.85" />
+    <rect x="216" y="256" width="330" height="26" opacity="0.85" />
+    <rect x="216" y="300" width="188" height="26" opacity="0.85" />
+  </g>
+  <g fill="#111111" opacity="0.28">
+    <rect x="216" y="380" width="256" height="8" />
+    <rect x="216" y="402" width="228" height="8" />
+    <rect x="216" y="424" width="244" height="8" />
+  </g>
+  <rect x="700" y="212" width="288" height="288" fill="#111111" opacity="0.12" />
+  <g stroke="#111111" stroke-opacity="0.2">
+    <line x1="216" y1="540" x2="988" y2="540" />
+    <line x1="216" y1="584" x2="988" y2="584" />
+  </g>
+  <rect x="520" y="680" width="160" height="76" fill="#141414" />
+  <rect x="420" y="756" width="360" height="20" fill="#1d1d1d" />
+</svg>
