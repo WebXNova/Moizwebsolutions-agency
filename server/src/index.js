@@ -1,8 +1,7 @@
 import { createApp } from './app.js';
-import { collectMailConfigProblems, env } from './config/env.js';
+import { env } from './config/env.js';
 import { collectStartupProblems, ensureRuntimeDirectories } from './config/validate.js';
 import { closeDb, getDb } from './db/index.js';
-import { verifyTransport } from './email/mailer.js';
 import { describeError, logger } from './lib/logger.js';
 
 const startupProblems = collectStartupProblems();
@@ -46,19 +45,8 @@ const listenCallback = () => {
     listenHost: env.listenHost || 'all-interfaces',
     nodeEnv: env.nodeEnv,
     allowedOrigins: env.allowedOrigins,
+    detail: 'Inquiry emails are off; review new leads in the admin portal.',
   });
-
-  const problems = collectMailConfigProblems();
-  if (problems.length > 0) {
-    logger.warn('server.mail_unconfigured', {
-      problems,
-      detail:
-        'The API stays up, but inquiry notification emails will not send. Set the missing values in server/.env, then restart. For smtp.gmail.com, SMTP_PASS must be a 16-character App Password, not the Google account password.',
-    });
-    return;
-  }
-
-  verifyTransport();
 };
 
 const server = env.listenHost

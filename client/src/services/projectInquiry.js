@@ -64,10 +64,9 @@ export function buildInquiryRequest(form, honeypot = '') {
 }
 
 /**
- * Delivers the project brief to the Moiz Web Solutions inbox.
+ * Saves the project brief so the team can handle it in the admin portal.
  *
- * Resolves only when the server confirms the email was accepted, so the caller
- * can never show success for a message that did not go out.
+ * Resolves when the server confirms the inquiry was stored.
  *
  * @param {import('@/lib/buildProjectInquiryMessage').InquiryForm} form
  * @param {{ honeypot?: string; signal?: AbortSignal }} [options]

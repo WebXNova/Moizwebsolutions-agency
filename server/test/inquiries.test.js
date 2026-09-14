@@ -5,7 +5,7 @@ import { api, authHeader, getDb, loginAs, startServer, stopServer, validInquiry 
 const { server, base } = await startServer();
 after(() => stopServer(server));
 
-test('valid inquiry is persisted even when email is unconfigured', async () => {
+test('valid inquiry is persisted for the admin portal without sending email', async () => {
   const result = await api(base, '/api/project-inquiry', {
     method: 'POST',
     body: JSON.stringify(validInquiry),
@@ -18,7 +18,9 @@ test('valid inquiry is persisted even when email is unconfigured', async () => {
   assert.ok(row);
   assert.equal(row.email, 'client@example.com');
   assert.equal(row.status, 'new');
-  assert.equal(row.email_status, 'failed');
+  assert.equal(row.email_status, 'pending');
+  assert.equal(result.payload.emailStatus, 'pending');
+  assert.equal(result.payload.notificationSent, false);
 });
 
 test('invalid inquiry is rejected and not stored', async () => {
@@ -33,18 +35,33 @@ test('invalid inquiry is rejected and not stored', async () => {
   assert.equal(after, before);
 });
 
-test('duplicate emails are allowed', async () => {
+test('duplicate emails are allowed when the brief differs', async () => {
   const first = await api(base, '/api/project-inquiry', {
     method: 'POST',
-    body: JSON.stringify({ ...validInquiry, email: 'repeat@example.com' }),
+    body: JSON.stringify({ ...validInquiry, email: 'repeat@example.com', description: 'First brief for the studio.' }),
   });
   const second = await api(base, '/api/project-inquiry', {
     method: 'POST',
-    body: JSON.stringify({ ...validInquiry, email: 'repeat@example.com' }),
+    body: JSON.stringify({ ...validInquiry, email: 'repeat@example.com', description: 'A follow-up with a new scope.' }),
   });
   assert.equal(first.status, 201);
   assert.equal(second.status, 201);
   assert.notEqual(first.payload.inquiryId, second.payload.inquiryId);
+});
+
+test('identical inquiry retries reuse the existing record', async () => {
+  const body = { ...validInquiry, email: 'idempotent@example.com', description: 'Same payload sent twice.' };
+  const first = await api(base, '/api/project-inquiry', {
+    method: 'POST',
+    body: JSON.stringify(body),
+  });
+  const second = await api(base, '/api/project-inquiry', {
+    method: 'POST',
+    body: JSON.stringify(body),
+  });
+  assert.equal(first.status, 201);
+  assert.equal(second.status, 201);
+  assert.equal(first.payload.inquiryId, second.payload.inquiryId);
 });
 
 test('public users cannot list or update inquiries', async () => {

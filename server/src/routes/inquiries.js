@@ -1,21 +1,14 @@
 import { Router } from 'express';
-import { collectMailConfigProblems, env } from '../config/env.js';
 import { getDb } from '../db/index.js';
-import { sendMail } from '../email/mailer.js';
-import { renderBusinessInquiryEmail } from '../email/templates/businessInquiry.js';
-import { formatSubmittedAt } from '../inquiry/inquiryId.js';
 import {
   EMAIL_STATUSES,
   INQUIRY_STATUSES,
   formatInquiry,
   getInquiryById,
-  rowToNormalizedInquiry,
-  updateInquiryEmailStatus,
 } from '../inquiry/store.js';
 import { logActivity, getClientIp } from '../cms/activity.js';
 import { requireAuth, requireWrite } from '../middleware/auth.js';
 import { asInt, asString } from '../lib/validators.js';
-import { describeError, logger } from '../lib/logger.js';
 
 export const inquiriesRouter = Router();
 
@@ -141,72 +134,12 @@ inquiriesRouter.put('/:id', requireWrite, (req, res) => {
   return res.json({ ok: true, inquiry: formatInquiry(row) });
 });
 
-inquiriesRouter.post('/:id/resend', requireWrite, async (req, res) => {
-  const row = getInquiryById(req.params.id);
-  if (!row) {
-    return res.status(404).json({ ok: false, code: 'not_found', message: 'Inquiry not found.' });
-  }
-
-  const problems = collectMailConfigProblems();
-  if (problems.length > 0) {
-    logger.error('inquiry.resend_mail_unconfigured', { inquiryId: row.id, problems });
-    return res.status(503).json({
-      ok: false,
-      code: 'email_unavailable',
-      message: 'Email is not configured, so the notification could not be resent.',
-    });
-  }
-
-  const inquiry = rowToNormalizedInquiry(row);
-  const submittedAt = row.created_at ? new Date(row.created_at) : new Date();
-  const submittedAtLabel = formatSubmittedAt(
-    Number.isNaN(submittedAt.getTime()) ? new Date() : submittedAt,
-    env.mail.timezone,
-  );
-  const businessEmail = env.mail.businessEmail;
-  const clientIsBusiness = inquiry.client.email.toLowerCase() === businessEmail.toLowerCase();
-
-  const businessMessage = renderBusinessInquiryEmail(inquiry, {
-    inquiryId: row.id,
-    submittedAtLabel,
-    businessName: env.mail.businessName,
-    siteUrl: env.mail.siteUrl,
+inquiriesRouter.post('/:id/resend', requireWrite, (_req, res) => {
+  return res.status(410).json({
+    ok: false,
+    code: 'email_disabled',
+    message: 'Inquiry emails are disabled. Handle this lead in the admin portal.',
   });
-
-  try {
-    await sendMail({
-      to: businessEmail,
-      subject: businessMessage.subject,
-      text: businessMessage.text,
-      html: businessMessage.html,
-      replyTo: clientIsBusiness
-        ? undefined
-        : { name: inquiry.client.name, address: inquiry.client.email },
-      headers: { 'X-MWS-Inquiry-Id': row.id },
-    });
-  } catch (error) {
-    logger.error('inquiry.resend_failed', {
-      inquiryId: row.id,
-      error: describeError(error),
-    });
-    updateInquiryEmailStatus(getDb(), row.id, {
-      emailStatus: 'failed',
-      confirmationSent: Boolean(row.confirmation_sent),
-    });
-    return res.status(502).json({
-      ok: false,
-      code: 'send_failed',
-      message: 'The notification could not be sent.',
-    });
-  }
-
-  updateInquiryEmailStatus(getDb(), row.id, {
-    emailStatus: 'sent',
-    confirmationSent: Boolean(row.confirmation_sent),
-  });
-  audit(req, 'inquiry_notification_resent', row.id);
-  const updated = getInquiryById(row.id);
-  return res.json({ ok: true, inquiry: formatInquiry(updated) });
 });
 
 inquiriesRouter.delete('/:id', (_req, res) => {

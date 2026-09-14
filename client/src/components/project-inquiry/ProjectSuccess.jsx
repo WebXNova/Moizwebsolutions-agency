@@ -5,7 +5,7 @@ import { CheckIcon, WhatsAppIcon } from '@/lib/icons';
 import { cn } from '@/lib/cn';
 
 /**
- * Shown only after the inquiry API confirms the business email was accepted.
+ * Shown after the inquiry API confirms the brief was saved.
  *
  * @param {{
  *   form: import('@/lib/buildProjectInquiryMessage').InquiryForm;

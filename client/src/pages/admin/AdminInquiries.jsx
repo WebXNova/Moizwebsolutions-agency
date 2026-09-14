@@ -84,21 +84,6 @@ export function AdminInquiries() {
     }
   };
 
-  const resend = async () => {
-    if (!detail) return;
-    setSaving(true);
-    try {
-      const inquiry = await inquiryService.resendInquiry(detail.id);
-      setDetail(inquiry);
-      showToast('Notification resent.');
-      await load();
-    } catch (err) {
-      showToast(err.message, 'error');
-    } finally {
-      setSaving(false);
-    }
-  };
-
   const totalPages = Math.max(1, Math.ceil(pagination.total / pagination.limit));
 
   return (
@@ -269,14 +254,6 @@ export function AdminInquiries() {
                   className="rounded-lg border border-border-subtle px-3 py-2 text-[12px]"
                 >
                   Save notes
-                </button>
-                <button
-                  type="button"
-                  disabled={saving}
-                  onClick={resend}
-                  className="rounded-lg bg-brand-navy px-3 py-2 text-[12px] font-medium text-white disabled:opacity-50"
-                >
-                  Resend notification
                 </button>
               </div>
             </div>

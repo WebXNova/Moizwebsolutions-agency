@@ -25,11 +25,3 @@ export async function updateInquiry(id, data) {
   const payload = await apiRequest(`/api/admin/inquiries/${id}`, jsonOpts('PUT', data));
   return payload.inquiry;
 }
-
-export async function resendInquiry(id) {
-  const payload = await apiRequest(`/api/admin/inquiries/${id}/resend`, {
-    method: 'POST',
-    auth: true,
-  });
-  return payload.inquiry;
-}
