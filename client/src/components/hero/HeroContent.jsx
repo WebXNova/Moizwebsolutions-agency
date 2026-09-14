@@ -7,12 +7,11 @@ import { cn } from '@/lib/cn';
  * @param {{
  *   titleLines: string[];
  *   paragraph: string;
- *   cta: { label: string };
  *   secondaryCta?: { label?: string; url?: string };
  *   onCtaClick?: () => void;
  * }} props
  */
-export function HeroContent({ titleLines, paragraph, cta, secondaryCta, onCtaClick }) {
+export function HeroContent({ titleLines, paragraph, secondaryCta, onCtaClick }) {
   const reduced = usePrefersReducedMotion();
   const secondaryLabel = secondaryCta?.label?.trim();
 
@@ -36,7 +35,7 @@ export function HeroContent({ titleLines, paragraph, cta, secondaryCta, onCtaCli
       </p>
 
       <div className="mt-7 flex flex-wrap items-center gap-4 sm:mt-10 sm:gap-5 md:mt-11">
-        <HeroCTA onClick={onCtaClick}>{cta.label}</HeroCTA>
+        <HeroCTA href="#our-services">Our services</HeroCTA>
         {secondaryLabel ? (
           secondaryCta.url ? (
             <a

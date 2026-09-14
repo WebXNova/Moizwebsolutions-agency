@@ -3,15 +3,17 @@ import { Container } from '@/components/common/Container';
 import { IconButton } from '@/components/common/IconButton';
 import { Logo } from '@/components/navigation/Logo';
 import { LogoIntro } from '@/components/navigation/LogoIntro';
-import { SocialLinks } from '@/components/navigation/SocialLinks';
 import { FriesMenuIcon } from '@/components/navigation/FriesMenuIcon';
 import { MobileMenu } from '@/components/layout/MobileMenu';
+import { HeroCTA } from '@/components/hero/HeroCTA';
+import { useInquiry } from '@/context/InquiryProvider';
 import { cn } from '@/lib/cn';
 
 export function Header() {
   const headerRef = useRef(null);
   const [menuOpen, setMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const { open: openInquiry } = useInquiry();
 
   useEffect(() => {
     const update = () => setScrolled(window.scrollY > 8);
@@ -53,14 +55,14 @@ export function Header() {
       />
       <Container>
         <div className="flex items-center justify-between gap-3 py-2.5 sm:gap-5 sm:py-3">
-          <LogoIntro className="min-w-0 max-w-[min(22rem,calc(100%-3.75rem))] sm:max-w-none">
+          <LogoIntro className="min-w-0 max-w-[min(22rem,calc(100%-11.5rem))] sm:max-w-none">
             <Logo navTarget />
           </LogoIntro>
 
           <div className="flex shrink-0 items-center gap-2 sm:gap-3 lg:gap-5">
-            <div className="hidden lg:block">
-              <SocialLinks animate />
-            </div>
+            <HeroCTA size="header" onClick={openInquiry}>
+              {'Let\u2019s talk'}
+            </HeroCTA>
             <IconButton
               className={cn(
                 'h-11 w-11 text-foreground',

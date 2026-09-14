@@ -7,7 +7,7 @@ export const HOME_SECTIONS = [
   { id: 'our-works', label: 'Our Works' },
   { id: 'trusted-companies', label: 'Trusted Companies' },
   { id: 'testimonials', label: 'Testimonials' },
-  { id: 'services', label: 'Services' },
+  { id: 'our-services', label: 'Our Services' },
   { id: 'technologies', label: 'Technologies' },
   { id: 'value', label: 'Value' },
   { id: 'process', label: 'Process' },

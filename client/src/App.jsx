@@ -21,7 +21,6 @@ import { AdminCtaProcess } from '@/pages/admin/AdminCtaProcess';
 import { AdminUpdates } from '@/pages/admin/AdminUpdates';
 import { AdminContact } from '@/pages/admin/AdminContact';
 import { AdminSeo } from '@/pages/admin/AdminSeo';
-import { AdminMedia } from '@/pages/admin/AdminMedia';
 import { AdminActivityLogs } from '@/pages/admin/AdminActivityLogs';
 import { AdminInquiries } from '@/pages/admin/AdminInquiries';
 import { AdminUsers } from '@/pages/admin/AdminUsers';
@@ -67,7 +66,6 @@ export default function App() {
           <Route path="inquiries" element={<AdminInquiries />} />
           <Route path="contact" element={<AdminContact />} />
           <Route path="seo" element={<AdminSeo />} />
-          <Route path="media" element={<AdminMedia />} />
           <Route path="activity-logs" element={<AdminActivityLogs />} />
           <Route path="users" element={<AdminUsers />} />
         </Route>

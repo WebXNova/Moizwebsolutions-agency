@@ -32,7 +32,6 @@ export function Hero() {
             <HeroContent
               titleLines={heroContent.titleLines}
               paragraph={heroContent.paragraph}
-              cta={heroContent.cta}
               secondaryCta={heroContent.secondaryCta}
               onCtaClick={open}
             />

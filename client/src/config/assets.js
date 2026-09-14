@@ -1,21 +1,21 @@
 import heroVisualImage from '@/components/logo and animation/ChatGPT Image Aug 26, 2026, 01_51_15 PM.png';
 import mrbClassesPreview from '@/components/logo and animation/Screenshot (2).png';
 import founderPortrait from '@/assets/images/founder.png';
+import mainLogo from '@/assets/images/main-logo.png';
 
 /**
  * Single source of truth for image paths so artwork can be swapped without
- * touching component code. Brand files live in `client/public/assets`; the hero
- * visual is imported from source so Vite serves it without duplicating the file.
+ * touching component code. The brand mark is imported from source so Vite
+ * fingerprints it; the hero visual is imported the same way.
  */
 export const assets = {
   /**
-   * Derived from the master logo in `client/src/components/logo and animation`
-   * by `client/scripts/prepare-brand-assets.ps1`. Intrinsic sizes are recorded
-   * so the header can reserve the exact box and never shift on load.
+   * Primary brand mark (`client/src/assets/images/main-logo.png`),
+   * white background removed. Height is constrained in each placement.
    */
   brand: {
-    lockup: { src: '/assets/mws-logo.png', width: 538, height: 206 },
-    monogram: { src: '/assets/mws-monogram.png', width: 210, height: 206 },
+    lockup: { src: mainLogo, width: 1293, height: 935 },
+    monogram: { src: mainLogo, width: 1293, height: 935 },
   },
   heroVisual: {
     src: heroVisualImage,

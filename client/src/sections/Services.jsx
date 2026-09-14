@@ -24,7 +24,7 @@ export function Services() {
   const servicesContent = resolveServicesContent(content?.servicesContent);
 
   return (
-    <Section id="services">
+    <Section id="our-services">
       <Container>
         <div
           ref={ref}

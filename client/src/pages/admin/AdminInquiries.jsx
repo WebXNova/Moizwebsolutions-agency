@@ -151,8 +151,7 @@ export function AdminInquiries() {
                     <th className="pb-3 pr-4 font-medium">Name</th>
                     <th className="pb-3 pr-4 font-medium">Email</th>
                     <th className="pb-3 pr-4 font-medium">Service</th>
-                    <th className="pb-3 pr-4 font-medium">Status</th>
-                    <th className="pb-3 font-medium">Email</th>
+                    <th className="pb-3 font-medium">Status</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -168,11 +167,8 @@ export function AdminInquiries() {
                       <td className="py-3 pr-4 text-muted-foreground">
                         {(inquiry.services || []).map((service) => service.title).join(', ') || '—'}
                       </td>
-                      <td className="py-3 pr-4">
-                        <StatusBadge status={inquiry.status} />
-                      </td>
                       <td className="py-3">
-                        <StatusBadge status={inquiry.emailStatus} />
+                        <StatusBadge status={inquiry.status} />
                       </td>
                     </tr>
                   ))}

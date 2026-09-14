@@ -189,14 +189,20 @@ export function seedCmsContent(db) {
       VALUES (?, ?, ?, ?, ?, ?)
     `);
     const navItems = [
-      { label: 'Services', href: '/#services', isSystem: 1, displayOrder: 1 },
-      { label: 'Work', href: '/#work', isSystem: 1, displayOrder: 2 },
+      { label: 'Services', href: '/#our-services', isSystem: 1, displayOrder: 1 },
+      { label: 'Work', href: '/#our-works', isSystem: 1, displayOrder: 2 },
       { label: 'Process', href: '/#process', isSystem: 1, displayOrder: 3 },
       { label: 'Contact', href: '/#contact', isSystem: 1, displayOrder: 4 },
     ];
     for (const item of navItems) {
       insert.run(randomUUID(), item.label, item.href, 1, item.isSystem, item.displayOrder);
     }
+  } else {
+    db.prepare(`
+      UPDATE navigation_items
+      SET href = '/#our-services'
+      WHERE href IN ('/#services', '#services')
+    `).run();
   }
   });
   seedAll();
