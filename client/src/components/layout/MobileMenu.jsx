@@ -21,7 +21,7 @@ const EXIT_MS = 360;
 const SITE_SHELL = '[data-site-shell]';
 
 /**
- * Full-viewport mobile/tablet nav. Portaled to document.body so it is not
+ * Full-viewport site menu. Portaled to document.body so it is not
  * trapped by header backdrop-filter or the page shell’s overflow/stacking context.
  *
  * @param {{ isOpen?: boolean; onClose?: () => void }} props
@@ -92,18 +92,6 @@ export function MobileMenu({ isOpen = false, onClose }) {
   }, [isOpen, entered]);
 
   useEffect(() => {
-    if (!isOpen) return undefined;
-
-    const desktopQuery = window.matchMedia('(min-width: 1024px)');
-    const handleDesktopChange = (event) => {
-      if (event.matches) onClose?.();
-    };
-
-    desktopQuery.addEventListener('change', handleDesktopChange);
-    return () => desktopQuery.removeEventListener('change', handleDesktopChange);
-  }, [isOpen, onClose]);
-
-  useEffect(() => {
     if (!isOpen || !mounted) return undefined;
 
     const handleTab = (event) => {
@@ -143,7 +131,7 @@ export function MobileMenu({ isOpen = false, onClose }) {
     <div
       id={DIALOG_ID}
       className={cn(
-        'fx-mobile-menu fixed inset-0 z-[100] lg:hidden',
+        'fx-mobile-menu fixed inset-0 z-[100]',
         'flex flex-col bg-background',
       )}
       data-open={entered ? 'true' : 'false'}
@@ -154,21 +142,18 @@ export function MobileMenu({ isOpen = false, onClose }) {
       <div aria-hidden="true" className="pointer-events-none absolute inset-0 bg-background" />
 
       <Container className="fx-mobile-menu-inner relative z-[1] flex h-full min-h-0 flex-col">
-        <div className="flex items-center justify-between gap-4 py-4 sm:py-5 md:py-6">
+        <div className="flex items-center justify-between gap-3 py-2.5 sm:py-3">
           <Logo />
-          <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
-            <ThemeToggle />
-            <IconButton
-              ref={closeRef}
-              className="h-11 w-11 -mr-1.5 text-brand-blue"
-              label="Close menu"
-              aria-controls={DIALOG_ID}
-              aria-expanded={isOpen}
-              onClick={onClose}
-            >
-              <FriesMenuIcon open />
-            </IconButton>
-          </div>
+          <IconButton
+            ref={closeRef}
+            className="h-11 w-11 text-brand-blue"
+            label="Close menu"
+            aria-controls={DIALOG_ID}
+            aria-expanded={isOpen}
+            onClick={onClose}
+          >
+            <FriesMenuIcon open />
+          </IconButton>
         </div>
 
         <p id={titleId} className="sr-only">
@@ -176,6 +161,13 @@ export function MobileMenu({ isOpen = false, onClose }) {
         </p>
 
         <div className="flex min-h-0 flex-1 flex-col overflow-y-auto">
+          <div className="mt-8 flex flex-col items-start gap-3">
+            <p className="text-[0.6875rem] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
+              Theme
+            </p>
+            <ThemeToggle />
+          </div>
+
           <Navigation orientation="vertical" size="lg" className="mt-10" onNavigate={onClose} />
 
           <div className="fx-mobile-menu-cta mt-auto flex flex-col items-stretch gap-8 pb-12 pt-12 sm:items-start">

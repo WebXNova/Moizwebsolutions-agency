@@ -35,7 +35,7 @@ export function ProjectReview({ form, onEditStep }) {
       content: (
         <div className="space-y-3">
           {projectTypeGroups.length > 0 ? (
-            <p className="text-[0.75rem] leading-relaxed text-ink-muted">
+            <p className="text-[0.75rem] leading-relaxed text-gray-700 dark:text-neutral-300">
               {projectTypeGroups
                 .map((group) => `${group.title} — ${group.values.join(', ')}`)
                 .join(' · ')}
@@ -53,13 +53,13 @@ export function ProjectReview({ form, onEditStep }) {
       content: (
         <dl className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-1">
           <div>
-            <dt className="text-[0.5625rem] uppercase tracking-[0.16em] text-ink-faint">
+            <dt className="text-[0.5625rem] uppercase tracking-[0.16em] text-gray-600 dark:text-neutral-400">
               Budget ({form.currency})
             </dt>
             <dd className="mt-1.5 text-[0.8125rem] text-ink">{budget || 'Not specified'}</dd>
           </div>
           <div>
-            <dt className="text-[0.5625rem] uppercase tracking-[0.16em] text-ink-faint">
+            <dt className="text-[0.5625rem] uppercase tracking-[0.16em] text-gray-600 dark:text-neutral-400">
               Timeline
             </dt>
             <dd className="mt-1.5 text-[0.8125rem] text-ink">{timeline || 'Not specified'}</dd>
@@ -83,7 +83,7 @@ export function ProjectReview({ form, onEditStep }) {
             .filter(([, value]) => Boolean(value))
             .map(([label, value]) => (
               <div key={label}>
-                <dt className="text-[0.5625rem] uppercase tracking-[0.16em] text-ink-faint">
+                <dt className="text-[0.5625rem] uppercase tracking-[0.16em] text-gray-600 dark:text-neutral-400">
                   {label}
                 </dt>
                 <dd className="mt-1.5 break-words text-[0.8125rem] text-ink">{value}</dd>
@@ -107,7 +107,7 @@ export function ProjectReview({ form, onEditStep }) {
           )}
         >
           <div className="mb-3.5 flex items-center justify-between gap-4">
-            <h4 className="text-[0.625rem] font-medium uppercase tracking-[0.18em] text-ink-muted">
+            <h4 className="text-[0.625rem] font-semibold uppercase tracking-[0.18em] text-gray-700 dark:text-neutral-200">
               {block.label}
             </h4>
             <button

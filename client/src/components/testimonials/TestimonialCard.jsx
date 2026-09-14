@@ -110,7 +110,7 @@ export function TestimonialCard({
           {roleLine ? (
             <span
               className={cn(
-                'text-[0.6875rem] leading-snug text-current/55',
+                'text-[0.6875rem] leading-snug text-current/70',
                 play && 'animate-band-meta',
                 !play && !reduced && 'opacity-0',
               )}

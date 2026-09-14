@@ -1,81 +1,61 @@
+import { useState } from 'react';
 import { Container } from '@/components/common/Container';
 import { Divider } from '@/components/common/Divider';
 import { SectionLabel } from '@/components/common/SectionLabel';
 import { Section } from '@/components/common/Section';
-import { TestimonialCard } from '@/components/testimonials/TestimonialCard';
-import { testimonials as fallbackTestimonials, testimonialsContent } from '@/data/testimonials';
+import { LeaveReviewModal } from '@/components/testimonials/LeaveReviewModal';
+import { TestimonialIntroCard } from '@/components/testimonials/TestimonialIntroCard';
+import { TestimonialSlider } from '@/components/testimonials/TestimonialSlider';
+import { testimonialsContent } from '@/data/testimonials';
+import { testimonialIntro, testimonialReviews } from '@/data/testimonialSlider';
 import { useSiteContent } from '@/hooks/useSiteContent';
-import { resolveTestimonials, resolveTestimonialsLabel } from '@/lib/contentAdapters';
+import { resolveTestimonialsLabel } from '@/lib/contentAdapters';
 import { useInViewOnce } from '@/hooks/useInView';
 import { usePrefersReducedMotion } from '@/hooks/usePrefersReducedMotion';
-import { cn } from '@/lib/cn';
 
 export function Testimonials() {
-  const [viewRef, inView] = useInViewOnce({ threshold: 0.18, rootMargin: '0px 0px -8% 0px' });
+  const [viewRef, inView] = useInViewOnce({ threshold: 0.12, rootMargin: '0px 0px -8% 0px' });
   const reduced = usePrefersReducedMotion();
   const active = reduced || inView;
-  const play = active && !reduced;
   const { content } = useSiteContent();
-  const testimonials = resolveTestimonials(content?.testimonials) || fallbackTestimonials;
-  const label = resolveTestimonialsLabel(content?.sectionLabels);
+  const label = resolveTestimonialsLabel(content?.sectionLabels) || testimonialsContent.label;
+  const [reviews, setReviews] = useState(testimonialReviews);
+  const [reviewOpen, setReviewOpen] = useState(false);
 
   return (
-    <Section id="testimonials" spacing="none" variant="band" className="band-motion pt-0 pb-0">
+    <Section
+      id="testimonials"
+      spacing="none"
+      className="bg-background pb-16 pt-4 md:pb-20"
+    >
       <Container>
-        <div
-          ref={viewRef}
-          className={cn(play && 'animate-band-frame', !play && !reduced && 'opacity-0')}
-        >
-          <div
-            className={cn(
-              'band-rule-full',
-              play && 'animate-line-draw-var',
-              reduced && '[--line-draw:1]',
-            )}
-          >
-            <Divider className="bg-current/15" />
-          </div>
-
+        <div ref={viewRef}>
           <SectionLabel motion active={active} reduced={reduced}>
             {label}
           </SectionLabel>
+        </div>
 
-          {testimonials.length > 0 ? (
-            <div className="group/quotes grid grid-cols-1 gap-10 px-1 pb-10 sm:grid-cols-2 md:gap-8 lg:grid-cols-3 lg:gap-10 lg:pb-12">
-              {testimonials.map((testimonial, index) => (
-                <TestimonialCard
-                  key={testimonial.id}
-                  testimonial={testimonial}
-                  active={active}
-                  reduced={reduced}
-                  index={index}
-                />
-              ))}
-            </div>
-          ) : null}
+        <div className="grid grid-cols-1 items-start gap-8 lg:grid-cols-12 lg:gap-10 xl:gap-12">
+          <div className="lg:col-span-4">
+            <TestimonialIntroCard
+              intro={testimonialIntro}
+              onLeaveReview={() => setReviewOpen(true)}
+            />
+          </div>
 
-          <div className="relative">
-            <div
-              className={cn(
-                'band-rule-full',
-                play && 'animate-line-draw-var',
-                reduced && '[--line-draw:1]',
-              )}
-              style={play ? { animationDelay: '980ms' } : undefined}
-            >
-              <Divider className="bg-current/15" />
-            </div>
-            {play ? (
-              <span className="band-energy-pass" aria-hidden="true">
-                <span
-                  className="band-energy-beam animate-band-energy"
-                  style={{ animationDelay: '1100ms' }}
-                />
-              </span>
-            ) : null}
+          <div className="min-w-0 lg:col-span-8 lg:pt-1">
+            <TestimonialSlider reviews={reviews} revealed={active} />
           </div>
         </div>
+
+        <Divider className="mt-10 md:mt-12" />
       </Container>
+
+      <LeaveReviewModal
+        isOpen={reviewOpen}
+        onClose={() => setReviewOpen(false)}
+        onSubmit={(review) => setReviews((current) => [review, ...current])}
+      />
     </Section>
   );
 }

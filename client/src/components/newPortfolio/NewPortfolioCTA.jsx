@@ -18,9 +18,9 @@ export function NewPortfolioCTA() {
         onPointerLeave={onPointerLeave}
         onBlur={onBlur}
         className={cn(
-          'group relative isolate inline-block overflow-hidden rounded-sm bg-brand-yellow px-10 py-4',
-          'text-[0.75rem] font-semibold uppercase tracking-[0.14em] text-brand-ink',
-          'transition-colors will-change-transform hover:bg-brand-yellow-deep',
+          'group relative isolate inline-block max-w-full overflow-hidden rounded-sm bg-brand-yellow px-5 py-3.5 text-center sm:px-10 sm:py-4',
+          'text-[0.6875rem] font-semibold uppercase tracking-[0.12em] text-brand-ink sm:text-[0.75rem] sm:tracking-[0.14em]',
+          'transition-[background-color,opacity] will-change-transform hover:bg-brand-yellow-deep hover:opacity-85',
           'focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ring',
         )}
       >

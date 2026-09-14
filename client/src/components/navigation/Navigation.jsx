@@ -5,7 +5,7 @@ import { cn } from '@/lib/cn';
 
 const sizes = {
   sm: 'text-[15px] tracking-[-0.005em]',
-  lg: 'text-[28px] tracking-[-0.03em]',
+  lg: 'text-[clamp(1.5rem,6.4vw,1.75rem)] tracking-[-0.03em]',
 };
 
 /**

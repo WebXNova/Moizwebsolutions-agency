@@ -100,9 +100,9 @@ export function HeroHeadline({ titleLines, className }) {
     <h1
       aria-label={label}
       className={cn(
-        'hero-headline font-display font-medium text-foreground',
-        'max-w-[11.5ch] text-[clamp(2.6rem,7.2vw,5.85rem)] leading-[0.92] tracking-[-0.042em]',
-        'sm:max-w-[12.5ch] md:max-w-[13.5ch]',
+        'hero-headline max-w-full font-display font-medium text-foreground',
+        'text-[clamp(2.05rem,8.4vw,5.85rem)] leading-[1.06] tracking-[-0.03em]',
+        'sm:max-w-[12.5ch] sm:leading-[0.92] sm:tracking-[-0.042em] md:max-w-[13.5ch]',
         className,
       )}
     >
@@ -114,8 +114,8 @@ export function HeroHeadline({ titleLines, className }) {
           <span
             key={row.key}
             className={cn(
-              'block overflow-hidden py-[0.03em]',
-              row.indent && 'pl-[0.35em] sm:pl-[0.55em] md:pl-[0.7em]',
+              'block overflow-hidden px-[0.22em] py-[0.14em] -mx-[0.22em]',
+              row.indent && 'sm:pl-[0.55em] md:pl-[0.7em]',
             )}
           >
             <span

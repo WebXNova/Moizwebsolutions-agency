@@ -22,7 +22,7 @@ export function HeroContent({ titleLines, paragraph, cta, secondaryCta, onCtaCli
 
       <p
         className={cn(
-          'mt-8 max-w-[32rem] text-[clamp(0.9375rem,1.6vw,1.0625rem)] leading-[1.75] text-secondary-foreground sm:mt-9 md:mt-10',
+          'mt-6 max-w-[32rem] text-[0.9375rem] leading-[1.65] text-secondary-foreground sm:mt-9 sm:text-[clamp(0.9375rem,1.6vw,1.0625rem)] sm:leading-[1.75] md:mt-10',
           !reduced && 'motion-safe:animate-hero-copy',
         )}
       >
@@ -35,7 +35,7 @@ export function HeroContent({ titleLines, paragraph, cta, secondaryCta, onCtaCli
         )}
       </p>
 
-      <div className="mt-9 flex flex-wrap items-center gap-5 sm:mt-10 md:mt-11">
+      <div className="mt-7 flex flex-wrap items-center gap-4 sm:mt-10 sm:gap-5 md:mt-11">
         <HeroCTA onClick={onCtaClick}>{cta.label}</HeroCTA>
         {secondaryLabel ? (
           secondaryCta.url ? (

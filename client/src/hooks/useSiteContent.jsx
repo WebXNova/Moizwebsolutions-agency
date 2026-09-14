@@ -13,8 +13,9 @@ export function SiteContentProvider({ children }) {
       const data = await cmsService.getSiteContent();
       setContent(data);
       setError('');
-    } catch (err) {
-      setError(err.message || 'Failed to load site content.');
+    } catch {
+      setContent(null);
+      setError('');
     } finally {
       setLoading(false);
     }

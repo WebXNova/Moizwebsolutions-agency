@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { getFallbackProjects } from '@/data/projects';
 import * as projectService from '@/services/projectService';
 
 /**
@@ -17,10 +18,14 @@ export function useProjects(params = {}) {
     projectService
       .getProjects(params)
       .then((data) => {
-        if (active) setProjects(data);
+        if (!active) return;
+        setProjects(Array.isArray(data) ? data : []);
       })
-      .catch((err) => {
-        if (active) setError(err.message || 'Failed to load projects.');
+      .catch(() => {
+        if (!active) return;
+        // Never surface API/transport copy on the public site.
+        setProjects(getFallbackProjects(params));
+        setError(null);
       })
       .finally(() => {
         if (active) setLoading(false);

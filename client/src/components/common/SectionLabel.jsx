@@ -27,14 +27,14 @@ export function SectionLabel({
   return (
     <div
       className={cn(
-        'flex items-center justify-center gap-4 py-9 md:gap-6 md:py-11',
+        'flex items-center justify-center gap-3 py-7 sm:gap-4 sm:py-9 md:gap-6 md:py-11',
         className,
       )}
     >
       <span
         aria-hidden="true"
         className={cn(
-          'h-px w-10 origin-left bg-current/15 sm:w-16 md:w-24 lg:w-32',
+          'h-px w-6 origin-left bg-current/15 sm:w-16 md:w-24 lg:w-32',
           play && 'animate-line-reveal',
           pending && 'scale-x-0',
         )}
@@ -42,7 +42,7 @@ export function SectionLabel({
       />
       <h2
         className={cn(
-          'shrink-0 text-center text-[0.6875rem] font-normal tracking-[0.22em] text-current/55',
+          'min-w-0 max-w-[min(100%,14rem)] text-center text-[0.625rem] font-bold tracking-[0.16em] text-current/75 sm:max-w-none sm:text-[0.6875rem] sm:tracking-[0.22em]',
           uppercase && 'uppercase',
           motion && 'overflow-hidden',
         )}
@@ -65,7 +65,7 @@ export function SectionLabel({
       <span
         aria-hidden="true"
         className={cn(
-          'h-px w-10 origin-left bg-current/15 sm:w-16 md:w-24 lg:w-32',
+          'h-px w-6 origin-left bg-current/15 sm:w-16 md:w-24 lg:w-32',
           play && 'animate-line-reveal',
           pending && 'scale-x-0',
         )}

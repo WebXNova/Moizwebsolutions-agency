@@ -11,7 +11,7 @@ export function FeatureHighlights() {
   const [ref, revealed] = useInViewOnce({ threshold: 0.18, rootMargin: '0px 0px -10% 0px' });
 
   return (
-    <Section id="value" spacing="none" className="scroll-mt-6 pb-16 md:pb-20" aria-label="Why work with us">
+    <Section id="value" spacing="none" className="pb-16 md:pb-20" aria-label="Why work with us">
       <Container>
         <div
           ref={ref}

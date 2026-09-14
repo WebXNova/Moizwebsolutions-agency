@@ -81,7 +81,7 @@ export function CostValueCard({ content, revealed = false, delay = 0, className 
         <div className="flex min-w-0 items-center">
           <div
             className={cn(
-              'flex h-9 w-[58%] min-w-[8.5rem] max-w-full items-center justify-center rounded-md bg-feature-blue px-2.5 origin-left sm:px-3',
+              'flex h-9 w-[58%] min-w-0 max-w-full items-center justify-center rounded-md bg-feature-blue px-2.5 origin-left sm:min-w-[8.5rem] sm:px-3',
               revealed && 'motion-safe:animate-bar-grow',
             )}
             style={revealed ? { animationDelay: `${delay + 280}ms` } : undefined}

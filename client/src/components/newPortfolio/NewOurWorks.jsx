@@ -13,13 +13,13 @@ import { cn } from '@/lib/cn';
  * Isolated from the existing homepage Work section.
  */
 export function NewOurWorks() {
-  const { projects, loading, error } = useProjects({ featured: true });
+  const { projects, loading } = useProjects({ featured: true });
   const [ref, revealed] = useInViewOnce({ threshold: 0.12, rootMargin: '0px 0px -6% 0px' });
   const reduced = usePrefersReducedMotion();
   const play = revealed && !reduced;
 
   return (
-    <Section id="our-works" className="scroll-mt-6" aria-labelledby="new-our-works-heading">
+    <Section id="our-works" aria-labelledby="new-our-works-heading">
       <Container>
         <div ref={ref} className="relative text-center">
           <div className="overflow-hidden">
@@ -44,13 +44,11 @@ export function NewOurWorks() {
           </p>
         </div>
 
-        <div className="mt-16 lg:mt-20">
+        <div className="mt-10 sm:mt-16 lg:mt-20">
           {loading ? (
             <div className="flex justify-center py-16" role="status" aria-label="Loading projects">
               <LoadingBadge size="sm" label="Loading" />
             </div>
-          ) : error ? (
-            <p className="text-center text-muted-foreground">{error}</p>
           ) : projects.length === 0 ? (
             <p className="text-center text-muted-foreground">No featured projects yet.</p>
           ) : (
@@ -58,7 +56,7 @@ export function NewOurWorks() {
           )}
         </div>
 
-        <div className="mt-16 lg:mt-20">
+        <div className="mt-12 sm:mt-16 lg:mt-20">
           <NewPortfolioCTA />
         </div>
       </Container>

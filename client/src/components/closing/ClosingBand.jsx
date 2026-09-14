@@ -17,8 +17,8 @@ export function ClosingBand() {
   if (content?.cta?.visible === false) {
     return (
       <div className="w-full bg-closing-panel text-closing-ivory">
-        <div className="mx-auto max-w-site px-6 py-14 sm:px-10 sm:py-16 md:px-16 md:py-20 lg:px-20 lg:py-24">
-          <section id="process" className="scroll-mt-6" aria-label="Our process">
+        <div className="mx-auto max-w-site px-4 py-12 sm:px-10 sm:py-16 md:px-16 md:py-20 lg:px-20 lg:py-24">
+          <section id="process" className="scroll-mt-[var(--header-offset)]" aria-label="Our process">
             <ProcessRow />
           </section>
           <div className="mt-16 md:mt-20 lg:mt-24">
@@ -31,8 +31,8 @@ export function ClosingBand() {
 
   return (
     <div className="w-full bg-closing-panel text-closing-ivory">
-      <div className="mx-auto max-w-site px-6 py-14 sm:px-10 sm:py-16 md:px-16 md:py-20 lg:px-20 lg:py-24">
-        <section id="contact" aria-labelledby="closing-headline" className="scroll-mt-6">
+        <div className="mx-auto max-w-site px-4 py-12 sm:px-10 sm:py-16 md:px-16 md:py-20 lg:px-20 lg:py-24">
+        <section id="contact" aria-labelledby="closing-headline" className="scroll-mt-[var(--header-offset)]">
           <div className="grid grid-cols-1 items-start gap-10 lg:grid-cols-12 lg:gap-8">
             <div className="lg:col-span-7">
               <CinematicHeadline id="closing-headline" lines={splitCtaHeadline(ctaContent.headline)} />
@@ -47,7 +47,7 @@ export function ClosingBand() {
           </div>
         </section>
 
-        <section id="process" className="mt-16 scroll-mt-6 md:mt-20 lg:mt-24" aria-label="Our process">
+        <section id="process" className="mt-16 scroll-mt-[var(--header-offset)] md:mt-20 lg:mt-24" aria-label="Our process">
           <ProcessRow />
         </section>
 

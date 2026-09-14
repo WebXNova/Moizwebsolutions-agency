@@ -42,12 +42,15 @@ function PublicShell() {
       <AmbientGlow />
       <FilmGrain />
       <CustomCursor />
-      <div data-site-shell className="relative z-[2] min-h-screen overflow-x-clip bg-background text-foreground">
+      <div data-site-shell className="relative z-[2] min-h-screen bg-background text-foreground">
         <DocumentSeo />
         <Header />
         <UpdatesBanner />
-        <Outlet />
-        <ClosingBand />
+        {/* Clip horizontal overflow here so the header can use position:sticky. */}
+        <div className="overflow-x-clip">
+          <Outlet />
+          <ClosingBand />
+        </div>
       </div>
     </PageTransition>
   );

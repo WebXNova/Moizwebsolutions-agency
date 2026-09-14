@@ -4,7 +4,7 @@ const variants = {
   outline:
     'border border-accent/65 px-8 py-5 text-foreground hover:border-accent hover:bg-accent/8',
   primary:
-    'border border-accent bg-accent px-8 py-5 text-accent-foreground hover:bg-accent/90',
+    'border border-accent bg-accent px-8 py-5 text-accent-foreground hover:opacity-85',
   ghost: 'py-2 text-foreground hover:text-secondary-foreground',
 };
 
@@ -23,7 +23,7 @@ export function Button({ children, className, variant = 'outline', href, ...prop
     <Tag
       {...tagProps}
       className={cn(
-        'group inline-flex items-center justify-center gap-3 text-cta font-medium uppercase leading-none tracking-[0.18em] transition-colors duration-300',
+        'group inline-flex items-center justify-center gap-3 text-cta font-medium uppercase leading-none tracking-[0.18em] transition-[color,background-color,border-color,opacity] duration-300',
         'focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ring',
         'disabled:pointer-events-none disabled:opacity-50',
         variants[variant],

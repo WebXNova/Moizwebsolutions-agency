@@ -24,11 +24,11 @@ export function Hero() {
     <Section
       id="hero"
       spacing="none"
-      className="overflow-x-clip pt-8 pb-14 sm:pt-10 sm:pb-16 md:pt-12 md:pb-20 lg:pt-14 lg:pb-24"
+      className="overflow-x-clip pt-6 pb-10 sm:pt-10 sm:pb-16 md:pt-12 md:pb-20 lg:pt-14 lg:pb-24"
     >
       <Container>
-        <div className="grid grid-cols-1 items-center gap-10 md:grid-cols-[minmax(0,1.05fr)_minmax(0,0.95fr)] md:items-start md:gap-10 lg:gap-14 xl:gap-16">
-          <div ref={contentRef} className="will-change-transform md:max-w-[38rem] lg:max-w-[42rem]">
+        <div className="grid grid-cols-1 items-center gap-8 md:grid-cols-[minmax(0,1.05fr)_minmax(0,0.95fr)] md:items-start md:gap-10 lg:gap-14 xl:gap-16">
+          <div ref={contentRef} className="min-w-0 will-change-transform md:max-w-[38rem] lg:max-w-[42rem]">
             <HeroContent
               titleLines={heroContent.titleLines}
               paragraph={heroContent.paragraph}
@@ -40,11 +40,11 @@ export function Hero() {
             <HeroStat
               value={heroContent.stat.value}
               label={heroContent.stat.label}
-              className="mt-14 md:mt-16"
+              className="mt-10 md:mt-16"
             />
           </div>
 
-          <div ref={visualRef} className="w-full will-change-transform md:justify-self-stretch">
+          <div ref={visualRef} className="min-w-0 w-full will-change-transform md:justify-self-stretch">
             <HeroVisual
               visual={heroContent.visual}
               onPlay={() => setVideoOpen(true)}

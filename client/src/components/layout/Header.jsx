@@ -1,7 +1,6 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Container } from '@/components/common/Container';
 import { IconButton } from '@/components/common/IconButton';
-import { ThemeToggle } from '@/components/common/ThemeToggle';
 import { Logo } from '@/components/navigation/Logo';
 import { LogoIntro } from '@/components/navigation/LogoIntro';
 import { SocialLinks } from '@/components/navigation/SocialLinks';
@@ -10,30 +9,61 @@ import { MobileMenu } from '@/components/layout/MobileMenu';
 import { cn } from '@/lib/cn';
 
 export function Header() {
+  const headerRef = useRef(null);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
+
+  useEffect(() => {
+    const update = () => setScrolled(window.scrollY > 8);
+    update();
+    window.addEventListener('scroll', update, { passive: true });
+    return () => window.removeEventListener('scroll', update);
+  }, []);
+
+  useEffect(() => {
+    const node = headerRef.current;
+    if (!node) return undefined;
+
+    const syncOffset = () => {
+      document.documentElement.style.setProperty('--header-offset', `${node.offsetHeight}px`);
+    };
+
+    syncOffset();
+    const observer = new ResizeObserver(syncOffset);
+    observer.observe(node);
+    return () => {
+      observer.disconnect();
+      document.documentElement.style.removeProperty('--header-offset');
+    };
+  }, []);
 
   return (
-    <header className="relative z-50 border-b border-border-subtle bg-background/80 backdrop-blur-md">
+    <header
+      ref={headerRef}
+      className={cn(
+        'sticky top-0 z-50 border-b border-border-subtle backdrop-blur-md',
+        scrolled
+          ? 'bg-background/92 shadow-[0_8px_24px_-18px_rgb(20_26_34_/_0.35)]'
+          : 'bg-background/80',
+      )}
+    >
       <span
         aria-hidden="true"
         className="pointer-events-none absolute inset-x-0 top-0 h-[2px] bg-gradient-to-r from-transparent via-brand-yellow/85 to-transparent"
       />
       <Container>
-        <div className="flex items-center justify-between gap-4 py-4 sm:gap-5 sm:py-5 md:py-6">
-          <LogoIntro className="min-w-0 max-w-[58%] min-[375px]:max-w-[62%] sm:max-w-none">
+        <div className="flex items-center justify-between gap-3 py-2.5 sm:gap-5 sm:py-3">
+          <LogoIntro className="min-w-0 max-w-[min(22rem,calc(100%-3.75rem))] sm:max-w-none">
             <Logo navTarget />
           </LogoIntro>
 
-          <div className="hidden shrink-0 items-center gap-5 lg:flex xl:gap-6">
-            <SocialLinks animate />
-            <ThemeToggle />
-          </div>
-
-          <div className="flex shrink-0 items-center gap-1.5 sm:gap-2 lg:hidden">
-            <ThemeToggle />
+          <div className="flex shrink-0 items-center gap-2 sm:gap-3 lg:gap-5">
+            <div className="hidden lg:block">
+              <SocialLinks animate />
+            </div>
             <IconButton
               className={cn(
-                'h-11 w-11 -mr-1.5 text-foreground',
+                'h-11 w-11 text-foreground',
                 'hover-capable:hover:text-brand-blue',
                 menuOpen && 'text-brand-blue',
               )}

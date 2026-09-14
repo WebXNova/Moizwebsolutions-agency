@@ -11,7 +11,6 @@ export function InquiryProgress({ activeIndex, onStepSelect, maxReached = 0 }) {
     <ol className="flex items-center gap-2 overflow-x-auto sm:gap-3" aria-label="Project brief progress">
       {inquirySteps.map((step, index) => {
         const isActive = index === activeIndex;
-        const isDone = index < activeIndex;
         const isReachable = index <= maxReached;
 
         return (
@@ -25,9 +24,8 @@ export function InquiryProgress({ activeIndex, onStepSelect, maxReached = 0 }) {
                 'flex items-center gap-2 rounded-full px-1 py-1 text-[0.625rem] font-medium uppercase tracking-[0.14em]',
                 'transition-colors duration-300',
                 'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-yellow',
-                isActive && 'text-ink',
-                !isActive && isDone && 'text-ink-muted hover:text-ink',
-                !isActive && !isDone && 'text-ink-faint',
+                isActive && 'font-semibold text-ink',
+                !isActive && 'text-gray-600 hover:text-gray-800 dark:text-neutral-300 dark:hover:text-neutral-100',
                 isReachable && !isActive ? 'cursor-pointer' : 'cursor-default',
               )}
             >

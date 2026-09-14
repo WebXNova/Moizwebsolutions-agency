@@ -6,10 +6,10 @@ import { useProjects } from '@/hooks/useProjects';
 import { LoadingBadge } from '@/components/effects/LoadingBadge';
 
 export function Work() {
-  const { projects, loading, error } = useProjects({ featured: true });
+  const { projects, loading } = useProjects({ featured: true });
 
   return (
-    <Section id="work" className="scroll-mt-6">
+    <Section id="work">
       <Container>
         <div className="text-center">
           <h2 className="text-section font-light leading-[1.04] tracking-[-0.035em] text-foreground">
@@ -26,8 +26,6 @@ export function Work() {
             <div className="flex justify-center py-16" role="status" aria-label="Loading projects">
               <LoadingBadge size="sm" label="Loading" />
             </div>
-          ) : error ? (
-            <p className="text-center text-muted-foreground">{error}</p>
           ) : projects.length === 0 ? (
             <p className="text-center text-muted-foreground">No featured projects yet.</p>
           ) : (

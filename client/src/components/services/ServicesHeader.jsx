@@ -18,7 +18,7 @@ export function ServicesHeader({ className, active = true, reduced = false, cont
         className,
       )}
     >
-      <h2 className="lg:col-span-7">
+      <h2 className="min-w-0 lg:col-span-7">
         {lines.map((line, index) => (
           <span key={line} className="block overflow-hidden">
             <span

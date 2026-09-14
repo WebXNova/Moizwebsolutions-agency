@@ -5,6 +5,57 @@ import { socialIconMap } from '@/lib/icons';
 import { usePrefersReducedMotion } from '@/hooks/usePrefersReducedMotion';
 import { cn } from '@/lib/cn';
 
+/** Brand hover fill per platform — white glyph on an 80% brand colour. */
+const SOCIAL_HOVER = {
+  facebook:
+    'hover-capable:hover:bg-[#1877F2]/80 hover-capable:hover:text-white hover-capable:hover:shadow-[0_0_0_1px_rgb(24_119_242_/_0.28)]',
+  linkedin:
+    'hover-capable:hover:bg-[#0A66C2]/80 hover-capable:hover:text-white hover-capable:hover:shadow-[0_0_0_1px_rgb(10_102_194_/_0.28)]',
+  instagram:
+    'social-instagram-hover hover-capable:hover:text-white hover-capable:hover:shadow-[0_0_0_1px_rgb(225_48_108_/_0.28)]',
+};
+
+/**
+ * @param {{
+ *   href: string;
+ *   label: string;
+ *   platform: string;
+ *   variant?: 'default' | 'onDark';
+ *   Icon?: import('react').ComponentType<import('react').SVGProps<SVGSVGElement>>;
+ * }} props
+ */
+function SocialIconLink({ href, label, platform, variant = 'default', Icon }) {
+  return (
+    <a
+      href={href}
+      target="_blank"
+      rel="noreferrer noopener"
+      aria-label={label}
+      className={cn(
+        'group/social flex h-9 w-9 items-center justify-center rounded-full',
+        'transition-[transform,background-color,background-image,color,box-shadow,opacity] duration-300 ease-out',
+        'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring',
+        'hover-capable:hover:-translate-y-0.5 hover-capable:hover:scale-[1.06]',
+        variant === 'onDark' ? 'bg-white text-closing-panel' : 'bg-foreground/[0.06] text-muted-foreground',
+        SOCIAL_HOVER[platform] ??
+          'hover-capable:hover:bg-foreground/80 hover-capable:hover:text-background',
+      )}
+    >
+      {Icon ? (
+        <Icon
+          className={cn(
+            'h-4 w-4 transition-[transform,color] duration-300 ease-out',
+            'group-hover/social:translate-y-[-1px]',
+            platform === 'instagram' && 'group-hover/social:rotate-[-4deg]',
+            platform === 'facebook' && 'group-hover/social:scale-105',
+            platform === 'linkedin' && 'group-hover/social:translate-x-px',
+          )}
+        />
+      ) : null}
+    </a>
+  );
+}
+
 /**
  * @param {{ className?: string; variant?: 'default' | 'onDark'; animate?: boolean }} props
  */
@@ -24,33 +75,13 @@ export function SocialLinks({ className, variant = 'default', animate = true }) 
             className={cn(animate && !reduced && 'fx-social-enter')}
             style={animate && !reduced ? { animationDelay: `${180 + index * 70}ms` } : undefined}
           >
-            <a
+            <SocialIconLink
               href={link.href}
-              target="_blank"
-              rel="noreferrer noopener"
-              aria-label={link.label ?? link.platform}
-              className={cn(
-                'group/social flex h-9 w-9 items-center justify-center rounded-full',
-                'transition-[transform,background-color,color,box-shadow] duration-300 ease-out',
-                'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring',
-                'hover-capable:hover:-translate-y-0.5 hover-capable:hover:scale-[1.06]',
-                variant === 'onDark'
-                  ? 'bg-white text-closing-panel hover-capable:hover:bg-brand-yellow hover-capable:hover:text-brand-ink hover-capable:hover:shadow-[0_0_0_1px_rgb(255_194_14_/_0.35)]'
-                  : 'bg-foreground/[0.06] text-muted-foreground hover-capable:hover:bg-foreground/[0.1] hover-capable:hover:text-foreground hover-capable:hover:shadow-[0_0_0_1px_rgb(37_99_235_/_0.2)]',
-              )}
-            >
-              {Icon ? (
-                <Icon
-                  className={cn(
-                    'h-4 w-4 transition-transform duration-300 ease-out',
-                    'group-hover/social:translate-y-[-1px]',
-                    link.platform === 'instagram' && 'group-hover/social:rotate-[-4deg]',
-                    link.platform === 'facebook' && 'group-hover/social:scale-105',
-                    link.platform === 'linkedin' && 'group-hover/social:translate-x-px',
-                  )}
-                />
-              ) : null}
-            </a>
+              label={link.label ?? link.platform}
+              platform={link.platform}
+              variant={variant}
+              Icon={Icon}
+            />
           </li>
         );
       })}

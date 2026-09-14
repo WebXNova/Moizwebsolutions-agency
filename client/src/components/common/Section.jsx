@@ -20,7 +20,8 @@ export function Section({
   return (
     <Tag
       className={cn(
-        spacing === 'default' && 'py-20 md:py-24 lg:py-28',
+        'scroll-mt-[var(--header-offset)]',
+        spacing === 'default' && 'py-14 sm:py-20 md:py-24 lg:py-28',
         spacing === 'band' && 'py-12 md:py-14',
         variant === 'dark' && 'bg-surface text-foreground',
         variant === 'band' && 'bg-foreground text-background dark:bg-surface dark:text-foreground',

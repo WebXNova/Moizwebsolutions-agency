@@ -41,16 +41,16 @@ export function ProjectSuccess({ form, receipt, whatsappHref, onClose }) {
         </span>
       </div>
 
-      <h3 className="mt-7 text-[1.375rem] font-medium tracking-[-0.02em] text-ink sm:text-[1.625rem]">
+      <h3 className="mt-7 text-[1.375rem] font-semibold tracking-[-0.02em] text-ink sm:text-[1.625rem]">
         {inquiryContent.successTitle}
       </h3>
-      <p className="mx-auto mt-3 max-w-md text-[0.8125rem] leading-relaxed text-ink-muted">
+      <p className="mx-auto mt-3 max-w-md text-[0.8125rem] leading-relaxed text-gray-700 dark:text-neutral-300">
         {inquiryContent.successSubtitle}
       </p>
 
       {receipt?.inquiryId ? (
         <p className="mt-5">
-          <span className="block text-[0.5625rem] uppercase tracking-[0.18em] text-ink-faint">
+          <span className="block text-[0.5625rem] uppercase tracking-[0.18em] text-gray-600 dark:text-neutral-400">
             Inquiry ID
           </span>
           <span className="mt-2 inline-block rounded-sm border border-brand-yellow bg-brand-yellow/15 px-3 py-1.5 font-mono text-[0.75rem] font-semibold tracking-[0.08em] text-ink">
@@ -69,7 +69,7 @@ export function ProjectSuccess({ form, receipt, whatsappHref, onClose }) {
               'motion-safe:animate-fade-up motion-reduce:animate-none',
             )}
           >
-            <dt className="shrink-0 text-[0.5625rem] uppercase tracking-[0.16em] text-ink-faint sm:w-28">
+            <dt className="shrink-0 text-[0.5625rem] uppercase tracking-[0.16em] text-gray-600 dark:text-neutral-400 sm:w-28">
               {label}
             </dt>
             <dd className="break-words text-[0.8125rem] text-ink">{value}</dd>
@@ -78,7 +78,7 @@ export function ProjectSuccess({ form, receipt, whatsappHref, onClose }) {
       </dl>
 
       {receipt?.confirmationSent ? (
-        <p className="mx-auto mt-5 max-w-md text-[0.75rem] leading-relaxed text-ink-faint">
+        <p className="mx-auto mt-5 max-w-md text-[0.75rem] leading-relaxed text-gray-700 dark:text-neutral-300">
           {inquiryContent.confirmationNote}
         </p>
       ) : null}

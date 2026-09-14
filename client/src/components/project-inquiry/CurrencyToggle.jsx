@@ -30,7 +30,7 @@ export function CurrencyToggle({ value, onChange, ariaLabel = 'Budget currency' 
               'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-yellow',
               active
                 ? 'bg-brand-yellow text-brand-ink shadow-sm'
-                : 'text-ink-muted hover:text-ink',
+                : 'text-gray-700 hover:text-gray-900 dark:text-neutral-300 dark:hover:text-white',
             )}
           >
             {currency.label}

@@ -68,6 +68,7 @@
  * @property {string} [updatedAt]
  * @property {string} [previewPosition]
  * @property {number} [previewScale]
+ * @property {string[]} [gallery]
  */
 
 /**

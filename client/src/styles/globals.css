@@ -16,6 +16,25 @@
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     background-color: var(--background);
+    overflow-x: clip;
+    /* Keep hash / in-page targets below the sticky header. */
+    scroll-padding-top: var(--header-offset, 3.5rem);
+  }
+
+  :root {
+    --header-offset: 3.5rem;
+  }
+
+  @media (min-width: 640px) {
+    :root {
+      --header-offset: 4rem;
+    }
+  }
+
+  @media (min-width: 768px) {
+    :root {
+      --header-offset: 4.5rem;
+    }
   }
 
   /*
@@ -115,6 +134,7 @@
   body {
     margin: 0;
     min-width: 320px;
+    max-width: 100%;
     background-color: var(--background);
     color: var(--foreground);
     font-family: var(--font-sans);
@@ -173,6 +193,28 @@
 
   .logo-on-navy .logo-mark {
     filter: brightness(0) invert(0.92);
+  }
+
+  /* Wordmark uses the same navy + orbit blue as the MW mark. */
+  .logo-wordmark-ink {
+    color: var(--color-brand-navy-deep);
+  }
+
+  .logo-wordmark-blue {
+    color: var(--color-brand-blue);
+  }
+
+  .dark .logo-wordmark-ink {
+    color: rgb(255 255 255 / 0.9);
+  }
+
+  .dark .logo-wordmark-blue {
+    color: var(--color-brand-blue);
+  }
+
+  .logo-on-navy .logo-wordmark-ink,
+  .logo-on-navy .logo-wordmark-blue {
+    color: rgb(255 255 255 / 0.92);
   }
 
   @media (prefers-reduced-motion: no-preference) {
@@ -618,8 +660,9 @@
 @media (hover: hover) and (pointer: fine) {
   .fx-card-glow:hover {
     box-shadow:
-      0 0 0 1px rgb(255 194 14 / 0.28),
-      0 18px 40px -18px rgb(255 194 14 / 0.55);
+      0 0 0 1px rgb(255 194 14 / 0.22),
+      0 16px 36px -18px rgb(0 0 0 / 0.14),
+      0 18px 40px -18px rgb(255 194 14 / 0.38);
   }
 }
 
@@ -653,6 +696,22 @@
 
 .fx-social-enter {
   animation: social-enter 480ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .social-instagram-hover:hover,
+  .social-instagram-hover:focus-visible {
+    background-color: rgb(225 48 108 / 0.8);
+    background-image: linear-gradient(
+      45deg,
+      rgb(240 148 51 / 0.8),
+      rgb(230 104 60 / 0.8),
+      rgb(220 39 67 / 0.8),
+      rgb(204 35 102 / 0.8),
+      rgb(188 24 136 / 0.8)
+    );
+    color: #fff;
+  }
 }
 
 /* ── Minimal sidebar line + active dot ── */

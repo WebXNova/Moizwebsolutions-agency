@@ -1,19 +1,15 @@
 import { assets } from '@/config/assets';
 import { siteConfig } from '@/config/site';
-import { useMediaQuery } from '@/hooks/useMediaQuery';
 import { cn } from '@/lib/cn';
 
-const { lockup, monogram } = assets.brand;
-
-/** Full lockup from 360px up; monogram only on the narrowest phones. */
-const LOCKUP_QUERY = '(min-width: 22.5rem)';
+const { lockup } = assets.brand;
 
 /**
  * Brand mark, linking home.
  *
- * Monogram is reserved for 320px viewports where horizontal space is tight.
- * From 360px upward the full lockup scales by width so the wordmark stays
- * readable without distorting the asset or crowding header controls.
+ * Always uses the lockup with an explicit height so the HTML width/height
+ * attributes cannot blow the mark up to its intrinsic size. Header sizing is
+ * height-based so a square monogram stays navbar-sized.
  *
  * `navTarget` marks the header instance as the boot-loader flight destination.
  * Footer and mobile-menu copies must not set this.
@@ -21,37 +17,45 @@ const LOCKUP_QUERY = '(min-width: 22.5rem)';
  * @param {{ className?: string; compact?: boolean; navTarget?: boolean }} props
  */
 export function Logo({ className, compact = false, navTarget = false }) {
-  const showLockup = useMediaQuery(LOCKUP_QUERY);
-  const source = showLockup ? lockup : monogram;
-
   return (
     <a
       href="/"
       aria-label={`${siteConfig.name} \u2014 home`}
       className={cn(
-        'logo-link flex w-fit max-w-[calc(100vw-9.5rem)] shrink-0 min-w-0',
+        'logo-link flex min-w-0 max-w-full shrink-0 items-center gap-2 sm:gap-2.5',
         'focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ring',
         className,
       )}
     >
       <img
-        src={source.src}
-        width={source.width}
-        height={source.height}
+        src={lockup.src}
+        width={lockup.width}
+        height={lockup.height}
         alt=""
         fetchPriority="high"
         decoding="async"
-        data-brand-mark={showLockup ? 'lockup' : 'monogram'}
+        data-brand-mark="lockup"
         {...(navTarget ? { 'data-nav-logo': '' } : {})}
         className={cn(
-          'logo-mark h-auto w-auto max-w-full object-contain object-left',
-          showLockup
-            ? compact
-              ? 'w-[8.75rem] sm:w-[10.5rem]'
-              : 'w-[8.5rem] min-[375px]:w-[8.875rem] min-[390px]:w-[9.25rem] min-[414px]:w-[9.625rem] sm:w-[11rem] md:w-[12.75rem] lg:w-[14rem] xl:w-[14.25rem]'
-            : 'h-9 w-auto',
+          'logo-mark w-auto shrink-0 object-contain object-left',
+          compact
+            ? 'h-[2.04rem] max-h-[2.04rem] sm:h-[2.295rem] sm:max-h-[2.295rem]'
+            : 'h-[2.04rem] max-h-[2.04rem] sm:h-[2.295rem] sm:max-h-[2.295rem] md:h-[2.55rem] md:max-h-[2.55rem]',
         )}
       />
+      <span
+        aria-hidden="true"
+        className={cn(
+          'logo-wordmark min-w-0 truncate font-sans font-semibold leading-none tracking-[-0.03em]',
+          compact
+            ? 'text-[1.05rem] sm:text-[1.15rem]'
+            : 'text-[1.0625rem] sm:text-[1.25rem] md:text-[1.5rem]',
+        )}
+      >
+        <span className="logo-wordmark-ink">Moiz</span>
+        <span className="logo-wordmark-blue">Web</span>
+        <span className="logo-wordmark-ink">Solutions</span>
+      </span>
     </a>
   );
 }

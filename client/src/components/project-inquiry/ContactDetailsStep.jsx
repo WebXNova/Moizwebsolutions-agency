@@ -94,7 +94,7 @@ export function ContactDetailsStep({ form, errors, onFieldChange }) {
       </div>
 
       <div className="mt-9 border-t border-hairline pt-7">
-        <p className="mb-5 text-[0.625rem] font-medium uppercase tracking-[0.16em] text-ink-faint">
+        <p className="mb-5 text-[0.625rem] font-medium uppercase tracking-[0.16em] text-gray-700 dark:text-neutral-200">
           Helpful extras
         </p>
         <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">

@@ -87,7 +87,7 @@ export function ServiceCard({ service, selected, onToggle, index = 0 }) {
         <span className="block text-[0.9375rem] font-medium tracking-[-0.01em] text-ink">
           {service.title}
         </span>
-        <span className="mt-2 block text-[0.75rem] leading-[1.65] text-ink-muted">
+        <span className="mt-2 block text-[0.75rem] leading-[1.65] text-gray-700 dark:text-neutral-300">
           {service.description}
         </span>
       </span>

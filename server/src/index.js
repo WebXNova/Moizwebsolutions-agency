@@ -50,7 +50,11 @@ const listenCallback = () => {
 
   const problems = collectMailConfigProblems();
   if (problems.length > 0) {
-    logger.warn('server.mail_unconfigured', { problems });
+    logger.warn('server.mail_unconfigured', {
+      problems,
+      detail:
+        'The API stays up, but inquiry notification emails will not send. Set the missing values in server/.env, then restart. For smtp.gmail.com, SMTP_PASS must be a 16-character App Password, not the Google account password.',
+    });
     return;
   }
 

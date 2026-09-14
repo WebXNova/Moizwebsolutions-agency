@@ -7,7 +7,7 @@ import { cn } from '@/lib/cn';
 import * as categoryService from '@/services/categoryService';
 
 export function PortfolioPage() {
-  const { projects, loading, error } = useProjects();
+  const { projects, loading } = useProjects();
   const [categories, setCategories] = useState([]);
   const [categoryId, setCategoryId] = useState('');
 
@@ -56,8 +56,6 @@ export function PortfolioPage() {
               <div className="flex justify-center py-16" role="status" aria-label="Loading projects">
                 <SpinnerIcon className="h-8 w-8 animate-spin text-muted-foreground" />
               </div>
-            ) : error ? (
-              <p className="text-center text-muted-foreground">{error}</p>
             ) : visible.length === 0 ? (
               <p className="text-center text-muted-foreground">No projects yet.</p>
             ) : (

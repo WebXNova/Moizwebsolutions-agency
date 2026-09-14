@@ -22,7 +22,7 @@ export function OptionChip({ selected = false, onClick, children, className }) {
         'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-yellow',
         selected
           ? 'border-brand-yellow bg-brand-yellow/12 font-medium text-ink shadow-[0_0_0_1px_var(--color-brand-yellow)]'
-          : 'border-hairline bg-panel-soft text-ink-muted hover:border-hairline-strong hover:text-ink',
+          : 'border-hairline bg-panel-soft text-gray-800 hover:border-hairline-strong hover:text-gray-900 dark:text-neutral-100 dark:hover:text-white',
         'motion-safe:active:scale-[0.97]',
         className,
       )}

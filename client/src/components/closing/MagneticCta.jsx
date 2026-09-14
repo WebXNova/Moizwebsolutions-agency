@@ -24,10 +24,10 @@ export function MagneticCta({ onClick, children = 'Start Your Project', classNam
       onBlur={onBlur}
       className={cn(
         'group relative isolate inline-flex items-center justify-center gap-2.5 overflow-hidden',
-        'rounded-sm bg-brand-yellow px-6 py-3.5',
+        'max-w-full rounded-sm bg-brand-yellow px-5 py-3.5 sm:px-6',
         'text-cta font-semibold uppercase leading-none tracking-[0.16em] text-brand-ink',
-        'transition-[background-color] duration-300 ease-out will-change-transform',
-        'hover:bg-brand-yellow-deep',
+        'transition-[background-color,opacity] duration-300 ease-out will-change-transform',
+        'hover:bg-brand-yellow-deep hover:opacity-85',
         'focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-brand-yellow',
         className,
       )}

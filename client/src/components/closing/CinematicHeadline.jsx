@@ -31,7 +31,7 @@ export function CinematicHeadline({ id, lines = FALLBACK_LINES }) {
     <h2
       id={id}
       ref={ref}
-      className="font-serif text-[clamp(2.35rem,5.4vw,4.85rem)] font-medium leading-[1.08] tracking-[-0.012em] text-closing-ivory"
+      className="max-w-full break-words font-serif text-[clamp(2.1rem,8vw,4.85rem)] font-medium leading-[1.1] tracking-[-0.012em] text-closing-ivory sm:text-[clamp(2.35rem,5.4vw,4.85rem)]"
     >
       {displayLines.map((line, index) => (
         <span key={`${line}-${index}`} className="block overflow-hidden py-[0.02em]">

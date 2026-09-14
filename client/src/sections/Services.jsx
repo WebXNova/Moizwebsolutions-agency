@@ -24,7 +24,7 @@ export function Services() {
   const servicesContent = resolveServicesContent(content?.servicesContent);
 
   return (
-    <Section id="services" className="scroll-mt-6">
+    <Section id="services">
       <Container>
         <div
           ref={ref}

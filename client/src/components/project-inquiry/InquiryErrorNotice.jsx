@@ -26,8 +26,8 @@ export function InquiryErrorNotice({ message, whatsappHref, mailtoHref }) {
           <p className="text-[0.8125rem] font-medium text-ink">
             We couldn&rsquo;t send your project brief
           </p>
-          <p className="mt-1.5 text-[0.8125rem] leading-relaxed text-ink-muted">{message}</p>
-          <p className="mt-1.5 text-[0.75rem] leading-relaxed text-ink-faint">
+          <p className="mt-1.5 text-[0.8125rem] leading-relaxed text-gray-700 dark:text-neutral-300">{message}</p>
+          <p className="mt-1.5 text-[0.75rem] leading-relaxed text-gray-600 dark:text-neutral-400">
             Everything you entered is still here &mdash; nothing was lost.
           </p>
 

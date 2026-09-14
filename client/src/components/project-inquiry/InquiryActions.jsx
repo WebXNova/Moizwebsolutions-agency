@@ -100,7 +100,7 @@ export function PrimaryAction({
 export function GhostAction({ children, onClick, href, icon, disabled = false, className }) {
   const classes = cn(
     'group inline-flex items-center justify-center gap-2 rounded-md border border-hairline bg-panel',
-    'px-5 py-3.5 text-[0.6875rem] font-medium uppercase leading-none tracking-[0.14em] text-ink-muted',
+    'px-5 py-3.5 text-[0.6875rem] font-semibold uppercase leading-none tracking-[0.14em] text-gray-700 dark:text-neutral-200',
     'transition-[border-color,color,background-color,transform,opacity] duration-200 ease-out',
     'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-yellow',
     disabled

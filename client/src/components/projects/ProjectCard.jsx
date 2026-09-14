@@ -29,7 +29,7 @@ export function ProjectCard({ project, className }) {
   useBandProgress(ref, playParallax);
 
   return (
-    <TiltFrame className={className}>
+    <TiltFrame className={className} max={6}>
       <article ref={ref} className="project-card group/preview bg-surface-muted">
       <div className="preview-stage relative aspect-[4/3] min-h-[13.5rem] overflow-hidden sm:min-h-[15.5rem] lg:min-h-[16.5rem]">
         <ProjectPreview
@@ -51,15 +51,15 @@ export function ProjectCard({ project, className }) {
         />
       </div>
 
-      <div className="fx-card-glow relative z-10 mx-3 -mt-[4.5rem] bg-brand-navy-deep px-5 py-4 shadow-lg sm:mx-4">
+      <div className="fx-card-glow relative z-10 mx-3 -mt-[4.5rem] rounded-2xl bg-black/90 px-5 py-4 shadow-[0_12px_32px_rgb(0_0_0_/_0.14)] backdrop-blur-[2px] sm:mx-4">
         <h3 className="text-[15px] font-semibold uppercase tracking-[0.08em] text-brand-yellow">
           {panelTitle}
         </h3>
-        <p className="mt-1.5 line-clamp-2 text-[13px] leading-relaxed text-white/90">
+        <p className="mt-1.5 line-clamp-2 text-[13px] leading-relaxed text-white">
           {project.description}
         </p>
         {project.technologies ? (
-          <p className="mt-2.5 text-[11px] font-semibold text-brand-yellow">
+          <p className="mt-2.5 text-[11px] font-semibold text-brand-yellow transition-opacity duration-300 hover:opacity-85">
             {project.technologies}
           </p>
         ) : null}

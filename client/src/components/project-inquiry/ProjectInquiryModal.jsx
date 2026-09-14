@@ -379,11 +379,11 @@ export function ProjectInquiryModal({ isOpen, onClose }) {
               </p>
               <h2
                 id="inquiry-title"
-                className="mt-2 text-[1.1875rem] font-medium leading-[1.15] tracking-[-0.03em] text-ink sm:mt-2.5 sm:text-[1.75rem] lg:text-[2rem]"
+                className="mt-2 text-[1.1875rem] font-semibold leading-[1.15] tracking-[-0.03em] text-ink sm:mt-2.5 sm:text-[1.75rem] lg:text-[2rem]"
               >
                 {inquiryContent.title}
               </h2>
-              <p className="mt-2.5 hidden max-w-xl text-[0.8125rem] leading-relaxed text-ink-muted sm:block">
+              <p className="mt-2.5 hidden max-w-xl text-[0.8125rem] leading-relaxed text-gray-700 dark:text-neutral-300 sm:block">
                 {inquiryContent.subtitle}
               </p>
             </div>
@@ -432,11 +432,11 @@ export function ProjectInquiryModal({ isOpen, onClose }) {
                 <h3
                   ref={headingRef}
                   tabIndex={-1}
-                  className="text-[1.0625rem] font-medium tracking-[-0.015em] text-ink outline-none sm:text-[1.1875rem]"
+                  className="text-[1.0625rem] font-semibold tracking-[-0.015em] text-ink outline-none sm:text-[1.1875rem]"
                 >
                   {stepCopy.heading}
                 </h3>
-                <p className="mt-2 text-[0.8125rem] leading-relaxed text-ink-muted">
+                <p className="mt-2 text-[0.8125rem] leading-relaxed text-gray-700 dark:text-neutral-300">
                   {stepCopy.hint}
                 </p>
               </div>
@@ -513,7 +513,7 @@ export function ProjectInquiryModal({ isOpen, onClose }) {
                     Back
                   </GhostAction>
                 ) : (
-                  <p className="hidden text-[0.6875rem] text-ink-faint sm:block">
+                  <p className="hidden text-[0.6875rem] text-gray-600 dark:text-neutral-300 sm:block">
                     Step {activeStep.index} of {inquirySteps.length.toString().padStart(2, '0')}
                   </p>
                 )}

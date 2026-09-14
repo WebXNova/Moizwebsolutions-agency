@@ -13,7 +13,7 @@ export function ServiceGrid({ services = [], revealed = true }) {
   const [activeId, setActiveId] = useState(null);
 
   return (
-    <ul className="group/services mt-16 grid grid-cols-1 items-start md:mt-24 md:grid-cols-2 md:gap-0 lg:grid-cols-4">
+    <ul className="group/services mt-10 grid grid-cols-1 items-start sm:mt-16 md:mt-24 md:grid-cols-2 md:gap-0 lg:grid-cols-4">
       {services.map((service, index) => (
         <ServiceCard
           key={service.id}

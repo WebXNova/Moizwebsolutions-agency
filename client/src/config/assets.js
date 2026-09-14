@@ -1,5 +1,6 @@
 import heroVisualImage from '@/components/logo and animation/ChatGPT Image Aug 26, 2026, 01_51_15 PM.png';
 import mrbClassesPreview from '@/components/logo and animation/Screenshot (2).png';
+import founderPortrait from '@/assets/images/founder.png';
 
 /**
  * Single source of truth for image paths so artwork can be swapped without
@@ -19,8 +20,12 @@ export const assets = {
   heroVisual: {
     src: heroVisualImage,
     alt: 'Moiz Web Solutions workspace with laptop, branding, and creative tools on a desk',
-    width: 1448,
+    width: 1408,
     height: 1086,
+  },
+  founderPortrait: {
+    src: founderPortrait,
+    alt: 'Portrait of Muhammad Moiz',
   },
   work: {
     commerce: '/assets/work-commerce.svg',
