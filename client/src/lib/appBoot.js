@@ -6,7 +6,7 @@
  *   INITIAL_LOADING → LOGO_VISIBLE → APPLICATION_READY → LOGO_TRANSITION → SITE_REVEAL → COMPLETE
  *
  * Readiness is still driven by the real application-ready signal. This module only
- * choreographs the MW monogram from the loader into the live header mark.
+ * choreographs the brand mark from the loader into the live header mark.
  */
 
 import { assets } from '@/config/assets';
@@ -29,7 +29,6 @@ const SETTLE_MS = 160;
 const EASE = 'cubic-bezier(0.22, 1, 0.36, 1)';
 
 const { monogram } = assets.brand;
-const MONOGRAM_RATIO = monogram.width / monogram.height;
 
 let dismissed = false;
 let revealed = false;
@@ -138,8 +137,7 @@ function freezeMotion(loader, logo) {
 }
 
 /**
- * Navbar lockup is wider than the monogram. Land on the MW portion (left,
- * uniform scale by height) so the traveler never stretches.
+ * Fly the loader mark into the live header image without stretching.
  *
  * @param {Element} nav
  */
@@ -153,12 +151,6 @@ function destinationRect(nav) {
     const computedWidth = Number.parseFloat(getComputedStyle(nav).width);
     width = width || computedWidth || 0;
     height = height || (width && intrinsicW ? width * (intrinsicH / intrinsicW) : 0);
-  }
-
-  if (nav.getAttribute('data-brand-mark') === 'lockup') {
-    const destHeight = height;
-    const destWidth = destHeight * MONOGRAM_RATIO;
-    return { left, top, width: destWidth, height: destHeight };
   }
 
   return { left, top, width, height };

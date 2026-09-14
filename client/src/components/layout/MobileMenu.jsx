@@ -11,9 +11,6 @@ import { HeroCTA } from '@/components/hero/HeroCTA';
 import { useInquiry } from '@/context/InquiryProvider';
 import { useOverlay } from '@/hooks/useOverlay';
 import { usePrefersReducedMotion } from '@/hooks/usePrefersReducedMotion';
-import { useSiteContent } from '@/hooks/useSiteContent';
-import { resolveHero } from '@/lib/contentAdapters';
-import { heroContent as fallbackHero } from '@/data/hero';
 import { cn } from '@/lib/cn';
 
 const DIALOG_ID = 'mobile-navigation';
@@ -34,9 +31,7 @@ export function MobileMenu({ isOpen = false, onClose }) {
   const [mounted, setMounted] = useState(false);
   const [entered, setEntered] = useState(false);
   const { open: openInquiry } = useInquiry();
-  const { content } = useSiteContent();
-  const heroContent = resolveHero(content?.hero) || fallbackHero;
-  const talkLabel = heroContent.cta?.label || 'Let\u2019s talk';
+  const talkLabel = 'Let\u2019s talk';
 
   useOverlay({ isOpen, onClose, lockScroll: mounted });
 

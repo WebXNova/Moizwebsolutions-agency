@@ -48,7 +48,6 @@ const navSections = [
     label: 'Management',
     items: [
       { to: '/admin/inquiries', label: 'Inquiries', icon: MailIcon },
-      { to: '/admin/media', label: 'Media', icon: FolderIcon },
       { to: '/admin/categories', label: 'Categories', icon: TagIcon },
       { to: '/admin/seo', label: 'SEO', icon: SearchIcon },
     ],

@@ -13,7 +13,6 @@ const quickActions = [
   { label: 'Add Technology', to: '/admin/technologies' },
   { label: 'New Update', to: '/admin/updates' },
   { label: 'Inquiries', to: '/admin/inquiries' },
-  { label: 'Upload Media', to: '/admin/media' },
   { label: 'Edit Homepage', to: '/admin/hero' },
 ];
 
@@ -49,7 +48,6 @@ export function AdminDashboard() {
               <StatsCard label="Inquiries Today" value={data.stats.inquiriesToday ?? 0} />
               <StatsCard label="Inquiries This Week" value={data.stats.inquiriesThisWeek ?? 0} />
               <StatsCard label="Active Services" value={data.stats.activeServices} />
-              <StatsCard label="Media Files" value={data.stats.totalMedia} />
               <StatsCard label="Published Updates" value={data.stats.publishedUpdates} />
             </div>
 
