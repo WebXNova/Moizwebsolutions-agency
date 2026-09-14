@@ -4,6 +4,8 @@ import { useSiteContent } from '@/hooks/useSiteContent';
 import { siteConfig } from '@/config/site';
 import { legalPages } from '@/data/legal';
 
+const PUBLIC_PATHS = new Set(['/', '/portfolio', '/contact', '/privacy', '/terms', '/refund']);
+
 function upsertMeta(selector, attributes) {
   const value = attributes.content;
   if (!value) return;
@@ -35,7 +37,7 @@ function titleForPath(pathname, siteName, seo) {
   if (pathname === '/privacy') return `${siteName} | ${legalPages.privacy.title}`;
   if (pathname === '/terms') return `${siteName} | ${legalPages.terms.title}`;
   if (pathname === '/refund') return `${siteName} | ${legalPages.refund.title}`;
-  return siteName;
+  return `${siteName} | Page not found`;
 }
 
 /**
@@ -55,7 +57,7 @@ export function DocumentSeo() {
     const ogTitle = (pathname === '/' ? seo?.ogTitle : title) || title;
     const ogDescription = (pathname === '/' ? seo?.ogDescription : description) || description;
     const ogImage = seo?.ogImage || '';
-    const robots = seo?.robots || 'index,follow';
+    const robots = PUBLIC_PATHS.has(pathname) ? seo?.robots || 'index,follow' : 'noindex,nofollow';
     const siteUrl = (site?.url || siteConfig.url || '').replace(/\/+$/, '');
     const canonical =
       pathname === '/' && seo?.canonicalUrl

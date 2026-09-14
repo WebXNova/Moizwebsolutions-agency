@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { Home } from '@/pages/Home';
+import { NotFoundPage } from '@/pages/NotFound';
 import { PortfolioPage } from '@/pages/Portfolio';
 import { ContactPage } from '@/pages/Contact';
 import { LegalPage } from '@/pages/Legal';
@@ -70,7 +71,9 @@ export default function App() {
           <Route path="users" element={<AdminUsers />} />
         </Route>
 
-        <Route path="*" element={<Navigate to="/" replace />} />
+        <Route element={<PublicLayout />}>
+          <Route path="*" element={<NotFoundPage />} />
+        </Route>
       </Routes>
     </BrowserRouter>
   );

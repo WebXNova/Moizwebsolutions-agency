@@ -105,6 +105,7 @@
     .animate-hero-mark-underline,
     .animate-hero-spark,
     .animate-reveal-up,
+    .animate-trusted-in,
     .animate-bar-grow,
     .animate-price-swap,
     .animate-tech-marquee {
@@ -1078,5 +1079,28 @@
   .fx-cursor-dot,
   .fx-cursor-ring {
     display: none;
+  }
+}
+
+/* Trusted Founders banner — explicit width/height so Tailwind utilities cannot cap the frame. */
+.trusted-founders-frame {
+  width: 95% !important;
+  max-width: 95% !important;
+  min-height: 75vh;
+  overflow: hidden;
+  border-radius: 1.25rem;
+}
+
+@media (min-width: 768px) {
+  .trusted-founders-frame {
+    width: 90% !important;
+    max-width: 90% !important;
+    min-height: 70vh;
+  }
+}
+
+@media (min-width: 1024px) {
+  .trusted-founders-frame {
+    min-height: 85vh;
   }
 }

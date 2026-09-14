@@ -34,8 +34,15 @@ export function HeroContent({ titleLines, paragraph, secondaryCta, onCtaClick })
         )}
       </p>
 
-      <div className="mt-7 flex flex-wrap items-center gap-4 sm:mt-10 sm:gap-5 md:mt-11">
-        <HeroCTA href="#our-services">Our services</HeroCTA>
+      <div className="mt-7 flex flex-col items-stretch gap-3.5 md:mt-11 md:flex-row md:flex-wrap md:items-center md:gap-5">
+        <div className="w-full md:hidden">
+          <HeroCTA className="w-full min-h-11" onClick={onCtaClick}>
+            {'Let\u2019s talk'}
+          </HeroCTA>
+        </div>
+        <HeroCTA href="#our-services" className="w-full min-h-11 md:w-auto">
+          Our services
+        </HeroCTA>
         {secondaryLabel ? (
           secondaryCta.url ? (
             <a

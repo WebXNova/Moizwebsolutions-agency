@@ -2,6 +2,7 @@ import heroVisualImage from '@/components/logo and animation/ChatGPT Image Aug 2
 import mrbClassesPreview from '@/components/logo and animation/Screenshot (2).png';
 import founderPortrait from '@/assets/images/founder.png';
 import mainLogo from '@/assets/images/main-logo.png';
+import trustedFoundersImage from '@/assets/images/girl-image.png';
 
 /**
  * Single source of truth for image paths so artwork can be swapped without
@@ -26,6 +27,12 @@ export const assets = {
   founderPortrait: {
     src: founderPortrait,
     alt: 'Portrait of Muhammad Moiz',
+  },
+  trustedFounders: {
+    src: trustedFoundersImage,
+    alt: 'Founder working on a laptop in a bright studio',
+    width: 1920,
+    height: 1080,
   },
   work: {
     commerce: '/assets/work-commerce.svg',

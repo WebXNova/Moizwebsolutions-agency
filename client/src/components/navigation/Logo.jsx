@@ -11,7 +11,7 @@ const { lockup } = assets.brand;
  * attributes cannot blow the mark up to its intrinsic size. Header sizing is
  * height-based so a square monogram stays navbar-sized.
  *
- * `navTarget` marks the header instance as the boot-loader flight destination.
+ * `navTarget` marks the header instance (data attribute for layout targeting).
  * Footer and mobile-menu copies must not set this.
  *
  * @param {{ className?: string; compact?: boolean; navTarget?: boolean }} props

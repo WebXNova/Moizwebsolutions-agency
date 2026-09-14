@@ -55,14 +55,16 @@ export function Header() {
       />
       <Container>
         <div className="flex items-center justify-between gap-3 py-2.5 sm:gap-5 sm:py-3">
-          <LogoIntro className="min-w-0 max-w-[min(22rem,calc(100%-11.5rem))] sm:max-w-none">
+          <LogoIntro className="min-w-0 max-w-[min(22rem,calc(100%-4.25rem))] md:max-w-none">
             <Logo navTarget />
           </LogoIntro>
 
           <div className="flex shrink-0 items-center gap-2 sm:gap-3 lg:gap-5">
-            <HeroCTA size="header" onClick={openInquiry}>
-              {'Let\u2019s talk'}
-            </HeroCTA>
+            <div className="hidden md:block">
+              <HeroCTA size="header" onClick={openInquiry}>
+                {'Let\u2019s talk'}
+              </HeroCTA>
+            </div>
             <IconButton
               className={cn(
                 'h-11 w-11 text-foreground',
