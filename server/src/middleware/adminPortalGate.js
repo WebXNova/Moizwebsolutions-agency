@@ -1,5 +1,10 @@
-import { env } from '../config/env.js';
 import {
+  ADMIN_SECRET_MAX_LENGTH,
+  ADMIN_SECRET_MIN_LENGTH,
+  env,
+} from '../config/env.js';
+import {
+  firstPathSegment,
   mapSecretRequestToAdminPath,
   secretPrefixMatches,
   sendAdminPortalPage,
@@ -9,6 +14,22 @@ import { logger } from '../lib/logger.js';
 
 function isPortalMethod(method) {
   return method === 'GET' || method === 'HEAD';
+}
+
+/**
+ * Secret-shaped first segments (including a rotated-away path) must not fall
+ * through to the public SPA — that would look like a successful portal hit.
+ *
+ * @param {string} segment
+ */
+function looksLikeAdminSecretSegment(segment) {
+  if (!segment) return false;
+  if (segment.length < ADMIN_SECRET_MIN_LENGTH || segment.length > ADMIN_SECRET_MAX_LENGTH) {
+    return false;
+  }
+  if (!/^[A-Za-z0-9_-]+$/.test(segment)) return false;
+  if (!/[A-Za-z]/.test(segment)) return false;
+  return true;
 }
 
 function handleSecretEntry(req, res) {
@@ -46,6 +67,11 @@ export function attachAdminPortalGate(app) {
 
     if (pathname === '/admin' || pathname.startsWith('/admin/')) {
       logger.warn('admin.gate_denied', { reason: 'legacy_admin_path' });
+      return sendPortalNotFound(res);
+    }
+
+    if (looksLikeAdminSecretSegment(firstPathSegment(pathname))) {
+      logger.warn('admin.gate_denied', { reason: 'secret_mismatch' });
       return sendPortalNotFound(res);
     }
 
