@@ -6,7 +6,7 @@ import { AuthProvider } from '@/context/AuthProvider';
 import { armBootFailsafe } from '@/lib/appBoot';
 import '@/styles/globals.css';
 
-armBootFailsafe(12000);
+armBootFailsafe(2600);
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>

@@ -4,11 +4,6 @@ import { cn } from '@/lib/cn';
 /**
  * Header wrapper for the brand mark.
  *
- * First-load entrance is owned by the HTML boot flight (center → navbar).
- * This wrapper stays a layout pin so the header never shifts when the traveler
- * hands off to the real logo. CSS intro classes still exist if `useIntroAnimation`
- * is re-enabled later.
- *
  * `origin-left` pins the left edge so the header never appears to slide.
  *
  * @param {{ children: import('react').ReactNode; className?: string }} props

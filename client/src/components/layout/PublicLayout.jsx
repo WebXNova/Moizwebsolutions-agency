@@ -31,7 +31,6 @@ export function PublicLayout() {
 
 function PublicShell() {
   const loading = usePublicLoading();
-  // Reveal only when CMS content has settled (+ minimum boot duration).
   useAppReveal(!loading);
 
   return (

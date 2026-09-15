@@ -7,9 +7,9 @@ let hasCompleted = false;
 /**
  * Drives a one-shot header-logo entrance.
  *
- * The cinematic boot flight is the first-load intro. Playing brand-settle or
- * brand-reveal on the navbar mark after the monogram lands would make it jump,
- * so this stays idle. `onComplete` remains for the wrapper's animationend hook.
+ * The first-load intro is the HTML boot loader. This stays idle so the
+ * navbar mark does not jump after the overlay fades.
+ * `onComplete` remains for the wrapper's animationend hook.
  *
  * @returns {{ isPlaying: boolean; onComplete: () => void }}
  */
