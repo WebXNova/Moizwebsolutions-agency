@@ -1,4 +1,5 @@
 import { apiConfig, apiUrl } from '@/config/api';
+import { adminLoginHref, getAdminBase } from '@/lib/adminBase';
 
 const AUTH_KEY = 'mws-admin-token';
 
@@ -56,12 +57,9 @@ export async function apiRequest(path, options = {}) {
     if (!response.ok || payload?.ok === false) {
       if (auth && response.status === 401) {
         clearAuthToken();
-        if (
-          typeof window !== 'undefined' &&
-          window.location.pathname.startsWith('/admin') &&
-          !window.location.pathname.startsWith('/admin/login')
-        ) {
-          window.location.assign('/admin/login');
+        if (typeof window !== 'undefined' && getAdminBase()) {
+          const href = adminLoginHref();
+          if (window.location.pathname !== href) window.location.assign(href);
         }
       }
       const error = new Error(payload?.message || 'Request failed.');

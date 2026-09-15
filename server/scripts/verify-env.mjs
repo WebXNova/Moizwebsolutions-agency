@@ -27,4 +27,5 @@ logger.info('verify.env_ok', {
   port: env.port,
   listenHost: env.listenHost || 'all-interfaces',
   originCount: env.allowedOrigins.length,
+  adminSecretConfigured: Boolean(env.adminSecret.path),
 });

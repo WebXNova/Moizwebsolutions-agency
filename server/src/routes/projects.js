@@ -1,10 +1,12 @@
 import { Router } from 'express';
 import { randomUUID } from 'node:crypto';
+import { env } from '../config/env.js';
 import { getDb } from '../db/index.js';
 import { canViewUnpublished, optionalAuth, requireAuth, requireWrite } from '../middleware/auth.js';
 import { slugify } from '../lib/slug.js';
 import { deleteUnreferencedProjectImage } from '../lib/uploads.js';
 import { asBool, asInt, asOptionalUrl, asString, isValidUrl, normalizeUrl } from '../lib/validators.js';
+import { isSafeAssetUrl } from '../lib/safeUrl.js';
 
 export const projectsRouter = Router();
 
@@ -88,6 +90,7 @@ function validateProjectBody(body, isUpdate = false) {
   }
   if (!isUpdate || body.imageUrl !== undefined) {
     if (!imageUrl) errors.imageUrl = 'Project image is required.';
+    else if (!isSafeAssetUrl(imageUrl)) errors.imageUrl = 'Enter a valid image URL or site path.';
   }
   if (!isUpdate || body.liveUrl !== undefined) {
     if (!liveUrlRaw) errors.liveUrl = 'Live preview URL is required.';
@@ -146,7 +149,8 @@ projectsRouter.get('/', optionalAuth, (req, res) => {
     params.push(categoryId);
   }
 
-  query += ' ORDER BY p.display_order ASC, p.created_at DESC';
+  query += ' ORDER BY p.display_order ASC, p.created_at DESC LIMIT ?';
+  params.push(env.publicListLimit);
 
   const rows = db.prepare(query).all(...params);
   return res.json({ ok: true, projects: rows.map(formatProject) });

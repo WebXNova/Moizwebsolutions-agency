@@ -1,18 +1,30 @@
 import { Router } from 'express';
+import { env } from '../config/env.js';
 import { getDb } from '../db/index.js';
+import { logActivity, getClientIp } from '../cms/activity.js';
+import { deliverInquiryEmail } from '../inquiry/deliverEmail.js';
+import { formatSubmittedAt } from '../inquiry/inquiryId.js';
 import {
   EMAIL_STATUSES,
   INQUIRY_STATUSES,
   formatInquiry,
   getInquiryById,
+  rowToNormalizedInquiry,
 } from '../inquiry/store.js';
-import { logActivity, getClientIp } from '../cms/activity.js';
-import { requireAuth, requireWrite } from '../middleware/auth.js';
+import { requireAuth, requireInquiryAccess } from '../middleware/auth.js';
+import { createRateLimiter } from '../lib/rateLimit.js';
 import { asInt, asString } from '../lib/validators.js';
 
 export const inquiriesRouter = Router();
 
 inquiriesRouter.use(requireAuth);
+inquiriesRouter.use(requireInquiryAccess);
+
+const resendLimiter = createRateLimiter({
+  windowMs: env.rateLimit.resendWindowMs,
+  maxPerKey: env.rateLimit.resendMaxPerKey,
+  maxGlobal: env.rateLimit.resendMaxPerKey * 20,
+});
 
 function audit(req, action, resourceId, details = '') {
   logActivity({
@@ -97,7 +109,7 @@ inquiriesRouter.get('/:id', (req, res) => {
   return res.json({ ok: true, inquiry: formatInquiry(row) });
 });
 
-inquiriesRouter.put('/:id', requireWrite, (req, res) => {
+inquiriesRouter.put('/:id', (req, res) => {
   const db = getDb();
   const existing = getInquiryById(req.params.id);
   if (!existing) {
@@ -134,11 +146,42 @@ inquiriesRouter.put('/:id', requireWrite, (req, res) => {
   return res.json({ ok: true, inquiry: formatInquiry(row) });
 });
 
-inquiriesRouter.post('/:id/resend', requireWrite, (_req, res) => {
-  return res.status(410).json({
-    ok: false,
-    code: 'email_disabled',
-    message: 'Inquiry emails are disabled. Handle this lead in the admin portal.',
+inquiriesRouter.post('/:id/resend', async (req, res) => {
+  const key = req.admin?.id || req.ip || 'unknown';
+  const limit = resendLimiter.check(key);
+  if (!limit.allowed) {
+    res.set('Retry-After', String(limit.retryAfterSeconds));
+    return res.status(429).json({
+      ok: false,
+      code: 'rate_limited',
+      message: 'Too many notification retries. Please try again shortly.',
+      retryAfterSeconds: limit.retryAfterSeconds,
+    });
+  }
+
+  const existing = getInquiryById(req.params.id);
+  if (!existing) {
+    resendLimiter.refund(key);
+    return res.status(404).json({ ok: false, code: 'not_found', message: 'Inquiry not found.' });
+  }
+
+  const inquiry = rowToNormalizedInquiry(existing);
+  const created = existing.created_at ? new Date(String(existing.created_at).replace(' ', 'T')) : new Date();
+  const submittedAtLabel = formatSubmittedAt(
+    Number.isNaN(created.getTime()) ? new Date() : created,
+    env.mail.timezone,
+  );
+
+  const delivery = await deliverInquiryEmail(getDb(), inquiry, existing.id, submittedAtLabel);
+  audit(req, 'inquiry_email_resent', existing.id, delivery.emailStatus);
+
+  const row = getInquiryById(existing.id);
+  return res.json({
+    ok: true,
+    inquiry: formatInquiry(row),
+    emailStatus: delivery.emailStatus,
+    notificationSent: delivery.emailStatus === 'sent',
+    confirmationSent: delivery.confirmationSent,
   });
 });
 

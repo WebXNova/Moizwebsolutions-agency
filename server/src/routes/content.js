@@ -1,4 +1,5 @@
 import { Router } from 'express';
+import { env } from '../config/env.js';
 import { getDb } from '../db/index.js';
 import { getAllSettings, getSetting } from '../cms/seed.js';
 import {
@@ -19,45 +20,46 @@ contentRouter.get('/', (_req, res) => {
   const db = getDb();
   const settings = getAllSettings(db);
 
+  const cap = env.publicListLimit;
   const services = db
-    .prepare('SELECT * FROM services WHERE active = 1 ORDER BY display_order ASC, created_at ASC')
-    .all()
+    .prepare('SELECT * FROM services WHERE active = 1 ORDER BY display_order ASC, created_at ASC LIMIT ?')
+    .all(cap)
     .map(formatService);
 
   const testimonials = db
-    .prepare('SELECT * FROM testimonials WHERE published = 1 ORDER BY display_order ASC, created_at ASC')
-    .all()
+    .prepare('SELECT * FROM testimonials WHERE published = 1 ORDER BY display_order ASC, created_at ASC LIMIT ?')
+    .all(cap)
     .map(formatTestimonial);
 
   const trustedCompanies = db
-    .prepare('SELECT * FROM trusted_companies WHERE active = 1 ORDER BY display_order ASC, created_at ASC')
-    .all()
+    .prepare('SELECT * FROM trusted_companies WHERE active = 1 ORDER BY display_order ASC, created_at ASC LIMIT ?')
+    .all(cap)
     .map(formatTrustedCompany);
 
   const technologies = db
-    .prepare('SELECT * FROM technologies WHERE active = 1 ORDER BY display_order ASC, created_at ASC')
-    .all()
+    .prepare('SELECT * FROM technologies WHERE active = 1 ORDER BY display_order ASC, created_at ASC LIMIT ?')
+    .all(cap)
     .map(formatTechnology);
 
   const processSteps = db
-    .prepare('SELECT * FROM process_steps WHERE active = 1 ORDER BY display_order ASC, step_number ASC')
-    .all()
+    .prepare('SELECT * FROM process_steps WHERE active = 1 ORDER BY display_order ASC, step_number ASC LIMIT ?')
+    .all(cap)
     .map(formatProcessStep);
 
   const socialLinks = db
-    .prepare('SELECT * FROM social_links WHERE active = 1 ORDER BY display_order ASC, created_at ASC')
-    .all()
+    .prepare('SELECT * FROM social_links WHERE active = 1 ORDER BY display_order ASC, created_at ASC LIMIT ?')
+    .all(cap)
     .map(formatSocialLink);
 
   const navigation = db
-    .prepare('SELECT * FROM navigation_items WHERE active = 1 ORDER BY display_order ASC, created_at ASC')
-    .all()
+    .prepare('SELECT * FROM navigation_items WHERE active = 1 ORDER BY display_order ASC, created_at ASC LIMIT ?')
+    .all(cap)
     .map(formatNavigationItem);
 
   const now = new Date().toISOString();
   const updates = db
-    .prepare('SELECT * FROM website_updates ORDER BY display_order ASC, created_at DESC')
-    .all()
+    .prepare('SELECT * FROM website_updates ORDER BY display_order ASC, created_at DESC LIMIT ?')
+    .all(cap)
     .filter((row) => isUpdatePubliclyVisible(row, now))
     .map(formatWebsiteUpdate);
 

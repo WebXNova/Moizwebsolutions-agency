@@ -41,7 +41,7 @@ export function EditProject() {
 
   const handleSubmit = async (data) => {
     await projectService.updateProject(id, data);
-    navigate('/admin/projects');
+    navigate('/projects');
   };
 
   return (

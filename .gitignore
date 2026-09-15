@@ -30,3 +30,6 @@ server/backups/
 # Logs
 logs/
 *.log
+
+# Generated Nginx secret-path location (contains ADMIN_SECRET_PATH).
+deploy/nginx/mws-admin-secret.generated.conf

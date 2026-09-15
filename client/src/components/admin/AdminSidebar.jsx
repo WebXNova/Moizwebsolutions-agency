@@ -27,37 +27,37 @@ const navSections = [
   {
     label: 'Overview',
     items: [
-      { to: '/admin/dashboard', label: 'Dashboard', icon: DashboardIcon, end: true },
+      { to: '/dashboard', label: 'Dashboard', icon: DashboardIcon, end: true },
     ],
   },
   {
     label: 'Website',
     items: [
-      { to: '/admin/hero', label: 'Hero', icon: SparkIcon },
-      { to: '/admin/services', label: 'Services', icon: DesignIcon },
-      { to: '/admin/projects', label: 'Our Works', icon: FolderIcon },
-      { to: '/admin/trusted-companies', label: 'Trusted Companies', icon: BrandIcon },
-      { to: '/admin/testimonials', label: 'Testimonials', icon: VerifiedIcon },
-      { to: '/admin/technologies', label: 'Technologies', icon: DevelopmentIcon },
-      { to: '/admin/cta-process', label: 'CTA / Process', icon: RocketIcon },
-      { to: '/admin/updates', label: 'Updates', icon: EditIcon },
-      { to: '/admin/contact', label: 'Contact & Footer', icon: MailIcon },
+      { to: '/hero', label: 'Hero', icon: SparkIcon },
+      { to: '/services', label: 'Services', icon: DesignIcon },
+      { to: '/projects', label: 'Our Works', icon: FolderIcon },
+      { to: '/trusted-companies', label: 'Trusted Companies', icon: BrandIcon },
+      { to: '/testimonials', label: 'Testimonials', icon: VerifiedIcon },
+      { to: '/technologies', label: 'Technologies', icon: DevelopmentIcon },
+      { to: '/cta-process', label: 'CTA / Process', icon: RocketIcon },
+      { to: '/updates', label: 'Updates', icon: EditIcon },
+      { to: '/contact', label: 'Contact & Footer', icon: MailIcon },
     ],
   },
   {
     label: 'Management',
     items: [
-      { to: '/admin/inquiries', label: 'Inquiries', icon: MailIcon },
-      { to: '/admin/categories', label: 'Categories', icon: TagIcon },
-      { to: '/admin/seo', label: 'SEO', icon: SearchIcon },
+      { to: '/inquiries', label: 'Inquiries', icon: MailIcon },
+      { to: '/categories', label: 'Categories', icon: TagIcon },
+      { to: '/seo', label: 'SEO', icon: SearchIcon },
     ],
   },
   {
     label: 'System',
     items: [
-      { to: '/admin/settings', label: 'Settings', icon: SettingsIcon },
-      { to: '/admin/users', label: 'Users', icon: SettingsIcon },
-      { to: '/admin/activity-logs', label: 'Activity Logs', icon: DashboardIcon },
+      { to: '/settings', label: 'Settings', icon: SettingsIcon },
+      { to: '/users', label: 'Users', icon: SettingsIcon },
+      { to: '/activity-logs', label: 'Activity Logs', icon: DashboardIcon },
     ],
   },
 ];
@@ -71,7 +71,7 @@ function SidebarNav({ onNavigate }) {
 
   const handleLogout = () => {
     logout();
-    navigate('/admin/login');
+    navigate('/login');
     onNavigate?.();
   };
 
@@ -108,7 +108,7 @@ function SidebarNav({ onNavigate }) {
 
       <div className="border-t border-border-subtle pt-3">
         <NavLink
-          to="/admin/projects/new"
+          to="/projects/new"
           onClick={onNavigate}
           className="mb-1 flex items-center gap-3 rounded-lg px-3 py-2 text-[13px] text-muted-foreground hover:bg-surface-muted hover:text-foreground"
         >

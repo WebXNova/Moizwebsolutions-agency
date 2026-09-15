@@ -6,14 +6,14 @@ import * as authService from '@/services/authService';
 import { SpinnerIcon } from '@/lib/icons';
 
 const quickActions = [
-  { label: 'Add Project', to: '/admin/projects/new' },
-  { label: 'Add Testimonial', to: '/admin/testimonials' },
-  { label: 'Add Company', to: '/admin/trusted-companies' },
-  { label: 'Add Service', to: '/admin/services' },
-  { label: 'Add Technology', to: '/admin/technologies' },
-  { label: 'New Update', to: '/admin/updates' },
-  { label: 'Inquiries', to: '/admin/inquiries' },
-  { label: 'Edit Homepage', to: '/admin/hero' },
+  { label: 'Add Project', to: '/projects/new' },
+  { label: 'Add Testimonial', to: '/testimonials' },
+  { label: 'Add Company', to: '/trusted-companies' },
+  { label: 'Add Service', to: '/services' },
+  { label: 'Add Technology', to: '/technologies' },
+  { label: 'New Update', to: '/updates' },
+  { label: 'Inquiries', to: '/inquiries' },
+  { label: 'Edit Homepage', to: '/hero' },
 ];
 
 export function AdminDashboard() {
@@ -117,7 +117,7 @@ export function AdminDashboard() {
                           </p>
                         </div>
                         <Link
-                          to={`/admin/projects/${project.id}/edit`}
+                          to={`/projects/${project.id}/edit`}
                           className="text-[12px] text-muted-foreground hover:text-foreground"
                         >
                           Edit

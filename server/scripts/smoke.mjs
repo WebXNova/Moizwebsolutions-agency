@@ -51,6 +51,16 @@ const inquiry = await check('/api/project-inquiry', {
 });
 assert(inquiry.status === 422, 'invalid inquiry rejected');
 
+const adminDenied = await check('/api/admin/dashboard');
+assert(adminDenied.status === 401, 'admin dashboard requires auth');
+
+const inquiriesDenied = await check('/api/admin/inquiries');
+assert(inquiriesDenied.status === 401, 'inquiry PII requires auth');
+
+const liveHeaders = await fetch(`${base}/api/health/live`);
+assert(liveHeaders.headers.get('x-frame-options') === 'DENY', 'clickjacking header');
+assert(liveHeaders.headers.get('content-security-policy')?.includes('frame-ancestors'), 'csp frame-ancestors');
+
 const adminEmail = process.env.SMOKE_ADMIN_EMAIL;
 const adminPassword = process.env.SMOKE_ADMIN_PASSWORD;
 if (adminEmail && adminPassword) {

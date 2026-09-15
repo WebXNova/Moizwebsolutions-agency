@@ -5,7 +5,7 @@ import { api, authHeader, getDb, loginAs, startServer, stopServer, validInquiry 
 const { server, base } = await startServer();
 after(() => stopServer(server));
 
-test('valid inquiry is persisted for the admin portal without sending email', async () => {
+test('valid inquiry is persisted when SMTP is unconfigured', async () => {
   const result = await api(base, '/api/project-inquiry', {
     method: 'POST',
     body: JSON.stringify(validInquiry),
@@ -13,14 +13,15 @@ test('valid inquiry is persisted for the admin portal without sending email', as
   assert.equal(result.status, 201);
   assert.equal(result.payload.ok, true);
   assert.ok(result.payload.inquiryId);
+  assert.equal(result.payload.emailStatus, 'failed');
+  assert.equal(result.payload.notificationSent, false);
+  assert.equal(result.payload.confirmationSent, false);
 
   const row = getDb().prepare('SELECT * FROM inquiries WHERE id = ?').get(result.payload.inquiryId);
   assert.ok(row);
   assert.equal(row.email, 'client@example.com');
   assert.equal(row.status, 'new');
-  assert.equal(row.email_status, 'pending');
-  assert.equal(result.payload.emailStatus, 'pending');
-  assert.equal(result.payload.notificationSent, false);
+  assert.equal(row.email_status, 'failed');
 });
 
 test('invalid inquiry is rejected and not stored', async () => {

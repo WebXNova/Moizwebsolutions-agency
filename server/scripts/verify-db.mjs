@@ -10,7 +10,17 @@ import { closeDb, getDb } from '../src/db/index.js';
 import { describeError, logger } from '../src/lib/logger.js';
 
 try {
-  const report = inspectSchema(getDb());
+  const db = getDb();
+  const report = inspectSchema(db);
+  let integrity = 'skipped';
+  if (db.dialect !== 'mysql') {
+    const rows = db.pragma('integrity_check');
+    integrity = rows?.[0]?.integrity_check || String(rows?.[0] ?? '');
+    if (integrity !== 'ok') {
+      logger.error('verify.db_integrity_failed', { result: 'failed' });
+      process.exitCode = 1;
+    }
+  }
   if (!report.ok) {
     logger.error('verify.db_unhealthy', {
       missingTables: report.missingTables,
@@ -18,11 +28,12 @@ try {
       journalMode: report.journalMode,
     });
     process.exitCode = 1;
-  } else {
+  } else if (process.exitCode !== 1) {
     logger.info('verify.db_ok', {
       tableCount: report.tableCount,
       foreignKeys: report.foreignKeys,
       journalMode: report.journalMode,
+      integrity,
     });
   }
 } catch (error) {

@@ -188,6 +188,16 @@ function initializeSqliteCmsSchema(db) {
     CREATE INDEX IF NOT EXISTS idx_inquiries_created ON inquiries(created_at);
     CREATE INDEX IF NOT EXISTS idx_inquiries_status ON inquiries(status);
     CREATE INDEX IF NOT EXISTS idx_inquiries_email ON inquiries(email);
+
+    CREATE TABLE IF NOT EXISTS admin_sessions (
+      id TEXT PRIMARY KEY,
+      admin_id TEXT NOT NULL,
+      created_at TEXT NOT NULL DEFAULT (datetime('now')),
+      expires_at TEXT NOT NULL,
+      revoked_at TEXT
+    );
+
+    CREATE INDEX IF NOT EXISTS idx_admin_sessions_admin ON admin_sessions(admin_id);
   `);
 }
 
@@ -368,6 +378,15 @@ function initializeMysqlCmsSchema(db) {
       KEY idx_inquiries_created (created_at),
       KEY idx_inquiries_status (status),
       KEY idx_inquiries_email (email)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+    CREATE TABLE IF NOT EXISTS admin_sessions (
+      id VARCHAR(36) PRIMARY KEY,
+      admin_id VARCHAR(36) NOT NULL,
+      created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      expires_at DATETIME NOT NULL,
+      revoked_at DATETIME NULL,
+      KEY idx_admin_sessions_admin (admin_id)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
   `);
 }

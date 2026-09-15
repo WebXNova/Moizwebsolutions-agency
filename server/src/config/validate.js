@@ -1,8 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
-import { env, collectAuthConfigProblems } from './env.js';
-
-const JWT_EXPIRES = /^(?:\d+|[\d]+[smhdw])$/i;
+import { env, collectAuthConfigProblems, evaluateMysqlGuard } from './env.js';
+import { durationToMs } from '../lib/duration.js';
 
 /**
  * Browser Origin values: scheme + host + optional port, no path or slash.
@@ -59,7 +58,10 @@ export function isUnsafeDbLocation(dbPath, roots = { uploadsDir: env.uploads.dir
  * @returns {string[]}
  */
 export function collectStartupProblems() {
-  const problems = [...collectAuthConfigProblems()];
+  const problems = [
+    ...collectAuthConfigProblems(),
+    ...evaluateMysqlGuard({ isProduction: env.isProduction, dbHost: env.db.host }),
+  ];
 
   if (env.port < 1 || env.port > 65535) problems.push('PORT is not a valid TCP port');
   if (env.trustProxy < 0 || env.trustProxy > 32) problems.push('TRUST_PROXY must be an integer from 0 to 32');
@@ -79,8 +81,8 @@ export function collectStartupProblems() {
     problems.push('UPLOADS_PUBLIC_PATH must start with /');
   }
 
-  if (env.jwt.expiresIn && !JWT_EXPIRES.test(env.jwt.expiresIn)) {
-    problems.push('JWT_EXPIRES_IN must be a duration such as 7d, 12h, or 3600');
+  if (env.jwt.expiresIn && durationToMs(env.jwt.expiresIn) == null) {
+    problems.push('JWT_EXPIRES_IN must be a duration such as 12h, 15m, or 3600');
   }
 
   for (const origin of env.allowedOrigins) {
@@ -102,26 +104,30 @@ export function collectStartupProblems() {
     }
   }
 
-  if (env.db.host) {
-    if (!env.db.name) problems.push('DB_NAME is not set');
-    if (!env.db.user) problems.push('DB_USER is not set');
-    if (env.db.port < 1 || env.db.port > 65535) problems.push('DB_PORT is not a valid TCP port');
-  } else {
-    const dbLocation = isUnsafeDbLocation(env.db.path);
-    if (dbLocation) problems.push(dbLocation);
-  }
+  const dbLocation = isUnsafeDbLocation(env.db.path);
+  if (dbLocation) problems.push(dbLocation);
 
   if (isPathInside(env.backup.dir, env.uploads.dir)) {
     problems.push('BACKUP_DIR cannot be inside the uploads directory');
+  }
+
+  if (env.backup.offsiteDir) {
+    if (isPathInside(env.backup.offsiteDir, env.uploads.dir)) {
+      problems.push('BACKUP_OFFSITE_DIR cannot be inside the uploads directory');
+    }
+    if (isPathInside(env.backup.offsiteDir, path.dirname(env.db.path))) {
+      problems.push('BACKUP_OFFSITE_DIR cannot sit next to the live database');
+    }
+    if (env.isProduction && env.backup.passphrase.length < 16) {
+      problems.push('BACKUP_PASSPHRASE (16+) is required when BACKUP_OFFSITE_DIR is set in production');
+    }
   }
 
   return problems;
 }
 
 export function ensureRuntimeDirectories() {
-  if (!env.db.host) {
-    fs.mkdirSync(path.dirname(env.db.path), { recursive: true });
-  }
+  fs.mkdirSync(path.dirname(env.db.path), { recursive: true });
   fs.mkdirSync(env.uploads.dir, { recursive: true });
   fs.mkdirSync(path.join(env.uploads.dir, 'media'), { recursive: true });
   fs.mkdirSync(env.backup.dir, { recursive: true });

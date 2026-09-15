@@ -1,68 +1,61 @@
-import { MessageChannel, Worker, receiveMessageOnPort } from 'node:worker_threads';
+import mysql from 'mysql2/promise';
 import { translateSql } from './sqlDialect.js';
 
-const QUERY_TIMEOUT_MS = 60_000;
+const QUERY_TIMEOUT_MS = 30_000;
+const CONNECT_TIMEOUT_MS = 10_000;
 
+/**
+ * Async MySQL adapter using a connection pool.
+ *
+ * The previous implementation blocked the Node.js event loop with a
+ * synchronous worker wait. This adapter never blocks: every query is a Promise.
+ *
+ * Route handlers in this codebase are written against better-sqlite3's
+ * synchronous API. Production therefore uses SQLite. This class exists so
+ * MySQL cannot be re-enabled with the blocking worker pattern.
+ */
 export class MysqlDatabase {
   dialect = 'mysql';
 
-  /** @type {Worker} */
-  #worker;
+  /** @type {import('mysql2/promise').Pool} */
+  #pool;
 
-  constructor(config) {
-    this.#worker = new Worker(new URL('./mysql-worker.js', import.meta.url));
-    this.#worker.on('error', (error) => {
-      throw error;
-    });
-    this.#call('connect', { config });
+  /**
+   * @param {import('mysql2/promise').Pool} pool
+   */
+  constructor(pool) {
+    this.#pool = pool;
   }
 
   /**
-   * @param {string} op
-   * @param {Record<string, unknown>} [payload]
+   * @param {string} sql
+   * @param {unknown[]} [params]
    */
-  #call(op, payload = {}) {
-    const sab = new SharedArrayBuffer(4);
-    const lock = new Int32Array(sab);
-    const { port1, port2 } = new MessageChannel();
-    this.#worker.postMessage({ op, payload, lockSab: sab, port: port2 }, [port2]);
-    const wait = Atomics.wait(lock, 0, 0, QUERY_TIMEOUT_MS);
-    if (wait === 'timed-out') {
-      port1.close();
-      throw new Error(`MySQL ${op} timed out after ${QUERY_TIMEOUT_MS}ms`);
-    }
-    const received = receiveMessageOnPort(port1);
-    port1.close();
-    if (!received) {
-      throw new Error(`MySQL worker returned no result for ${op}`);
-    }
-    const { ok, result, error } = received.message;
-    if (!ok) {
-      const err = new Error(error?.message || 'MySQL query failed');
-      err.code = error?.code;
-      err.errno = error?.errno;
-      err.sqlState = error?.sqlState;
-      throw err;
-    }
-    return result;
+  async #execute(sql, params = []) {
+    const translated = translateSql(sql);
+    const [rows] = await this.#pool.query({
+      sql: translated,
+      timeout: QUERY_TIMEOUT_MS,
+      values: params,
+    });
+    return rows;
   }
 
   /**
    * @param {string} sql
    */
   prepare(sql) {
-    const translated = translateSql(sql);
     return {
-      get: (...params) => {
-        const rows = this.#call('execute', { sql: translated, params });
+      get: async (...params) => {
+        const rows = await this.#execute(sql, params);
         return Array.isArray(rows) ? rows[0] : undefined;
       },
-      all: (...params) => {
-        const rows = this.#call('execute', { sql: translated, params });
+      all: async (...params) => {
+        const rows = await this.#execute(sql, params);
         return Array.isArray(rows) ? rows : [];
       },
-      run: (...params) => {
-        const result = this.#call('execute', { sql: translated, params });
+      run: async (...params) => {
+        const result = await this.#execute(sql, params);
         if (Array.isArray(result)) {
           return { changes: result.length, lastInsertRowid: 0 };
         }
@@ -77,27 +70,30 @@ export class MysqlDatabase {
   /**
    * @param {string} sql
    */
-  exec(sql) {
-    this.#call('query', { sql: translateSql(sql) });
+  async exec(sql) {
+    await this.#pool.query({ sql: translateSql(sql), timeout: QUERY_TIMEOUT_MS });
   }
 
   /**
    * @param {(...args: unknown[]) => unknown} fn
    */
   transaction(fn) {
-    return (...args) => {
-      this.#call('begin');
+    return async (...args) => {
+      const connection = await this.#pool.getConnection();
       try {
-        const result = fn(...args);
-        this.#call('commit');
+        await connection.beginTransaction();
+        const result = await fn(...args);
+        await connection.commit();
         return result;
       } catch (error) {
         try {
-          this.#call('rollback');
+          await connection.rollback();
         } catch {
           // original error matters more than rollback failure
         }
         throw error;
+      } finally {
+        connection.release();
       }
     };
   }
@@ -111,25 +107,72 @@ export class MysqlDatabase {
     return options.simple ? value : [{ [name]: value }];
   }
 
-  close() {
+  async ping() {
+    const connection = await this.#pool.getConnection();
     try {
-      this.#call('close');
-    } catch {
-      // already gone
+      await connection.ping();
+    } finally {
+      connection.release();
     }
-    this.#worker.terminate();
+  }
+
+  async close() {
+    await this.#pool.end();
   }
 }
 
 /**
+ * Pool options used by createMysqlDatabase. Exported for tests.
+ *
  * @param {{ host: string; port: number; user: string; password: string; name: string }} dbEnv
  */
-export function createMysqlDatabase(dbEnv) {
-  return new MysqlDatabase({
+export function mysqlPoolOptions(dbEnv) {
+  return {
     host: dbEnv.host,
     port: dbEnv.port,
     user: dbEnv.user,
     password: dbEnv.password,
     database: dbEnv.name,
-  });
+    waitForConnections: true,
+    connectionLimit: 10,
+    queueLimit: 50,
+    connectTimeout: CONNECT_TIMEOUT_MS,
+    enableKeepAlive: true,
+    charset: 'utf8mb4',
+    multipleStatements: false,
+    dateStrings: true,
+    namedPlaceholders: false,
+  };
+}
+
+/**
+ * @param {{ host: string; port: number; user: string; password: string; name: string }} dbEnv
+ */
+export async function createMysqlDatabase(dbEnv) {
+  const options = mysqlPoolOptions(dbEnv);
+  let pool;
+  try {
+    pool = mysql.createPool(options);
+    const probe = await pool.getConnection();
+    probe.release();
+  } catch (error) {
+    if (error?.code !== 'ER_BAD_DB_ERROR') {
+      if (pool) await pool.end().catch(() => {});
+      throw error;
+    }
+    const { database, ...rest } = options;
+    const bootstrap = await mysql.createConnection(rest);
+    try {
+      await bootstrap.query(
+        `CREATE DATABASE IF NOT EXISTS \`${database}\` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci`,
+      );
+    } finally {
+      await bootstrap.end();
+    }
+    pool = mysql.createPool(options);
+  }
+
+  const db = new MysqlDatabase(pool);
+  await db.exec('SET NAMES utf8mb4');
+  return db;
 }

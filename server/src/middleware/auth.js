@@ -2,10 +2,12 @@ import jwt from 'jsonwebtoken';
 import { env } from '../config/env.js';
 import { getDb } from '../db/index.js';
 import { logger } from '../lib/logger.js';
+import { isSessionActive, issueSession, verifyAccessToken } from '../lib/sessions.js';
 
 export const ADMIN_ROLES = ['super_admin', 'content_manager', 'editor', 'viewer'];
 export const WRITE_ROLES = ['super_admin', 'content_manager', 'editor'];
 export const USER_ADMIN_ROLES = ['super_admin'];
+export const INQUIRY_ROLES = ['super_admin'];
 
 const UNAUTHORIZED = {
   ok: false,
@@ -33,7 +35,7 @@ export function formatAdmin(row) {
     id: row.id,
     email: row.email,
     name: row.name || '',
-    role: ADMIN_ROLES.includes(row.role) ? row.role : 'content_manager',
+    role: row.role,
     active: Boolean(row.active),
   };
 }
@@ -53,10 +55,19 @@ export function loadAdminById(id) {
 }
 
 /**
+ * Unknown/invalid roles never inherit write access.
+ *
+ * @param {ReturnType<typeof formatAdmin> | null} admin
+ */
+export function isKnownAdminRole(admin) {
+  return Boolean(admin && ADMIN_ROLES.includes(admin.role));
+}
+
+/**
  * @param {import('express').Request} req
  * @returns {string | null}
  */
-function readBearerToken(req) {
+export function readBearerToken(req) {
   const header = req.headers.authorization;
   return header?.startsWith('Bearer ') ? header.slice(7) : null;
 }
@@ -66,9 +77,17 @@ function readBearerToken(req) {
  * @returns {ReturnType<typeof formatAdmin> | null}
  */
 function resolveAdminFromToken(token) {
-  const payload = jwt.verify(token, env.jwt.secret);
-  const admin = loadAdminById(typeof payload.sub === 'string' ? payload.sub : '');
+  const payload = verifyAccessToken(token);
+  const adminId = typeof payload.sub === 'string' ? payload.sub : '';
+  const jti = typeof payload.jti === 'string' ? payload.jti : '';
+  if (!isSessionActive(jti)) return null;
+  const session = getDb()
+    .prepare('SELECT admin_id FROM admin_sessions WHERE id = ?')
+    .get(jti);
+  if (!session || session.admin_id !== adminId) return null;
+  const admin = loadAdminById(adminId);
   if (!admin || !admin.active) return null;
+  if (!isKnownAdminRole(admin)) return null;
   return admin;
 }
 
@@ -87,15 +106,18 @@ export function requireAuth(req, res, next) {
   }
 
   try {
+    const payload = verifyAccessToken(token);
     const admin = resolveAdminFromToken(token);
     if (!admin) {
-      logger.warn('auth.invalid_session', { reason: 'inactive_or_unknown' });
+      logger.warn('auth.invalid_session', { reason: 'inactive_unknown_or_revoked' });
       return res.status(401).json(INVALID_SESSION);
     }
     req.admin = admin;
+    req.accessTokenJti = typeof payload.jti === 'string' ? payload.jti : '';
     return next();
-  } catch {
-    logger.warn('auth.invalid_session', { reason: 'expired_or_malformed' });
+  } catch (error) {
+    const reason = error instanceof jwt.TokenExpiredError ? 'expired' : 'expired_or_malformed';
+    logger.warn('auth.invalid_session', { reason });
     return res.status(401).json(INVALID_SESSION);
   }
 }
@@ -132,7 +154,7 @@ export function requireRole(...roles) {
     if (!req.admin) {
       return res.status(401).json(UNAUTHORIZED);
     }
-    if (!roles.includes(req.admin.role)) {
+    if (!isKnownAdminRole(req.admin) || !roles.includes(req.admin.role)) {
       logger.warn('auth.forbidden', { role: req.admin.role, path: req.path });
       return res.status(403).json(FORBIDDEN);
     }
@@ -142,22 +164,20 @@ export function requireRole(...roles) {
 
 export const requireWrite = requireRole(...WRITE_ROLES);
 export const requireUserAdmin = requireRole(...USER_ADMIN_ROLES);
+export const requireInquiryAccess = requireRole(...INQUIRY_ROLES);
 
 /**
- * Any currently authenticated, active admin may see unpublished CMS records.
+ * Any currently authenticated, active admin with a known role may see unpublished CMS records.
  *
  * @param {import('express').Request} req
  */
 export function canViewUnpublished(req) {
-  return Boolean(req.admin?.id && req.admin.active);
+  return Boolean(req.admin?.id && req.admin.active && isKnownAdminRole(req.admin));
 }
 
 /**
  * @param {{ id: string; email: string }} admin
  */
 export function signToken(admin) {
-  return jwt.sign({ email: admin.email }, env.jwt.secret, {
-    subject: admin.id,
-    expiresIn: env.jwt.expiresIn,
-  });
+  return issueSession(admin);
 }

@@ -13,10 +13,13 @@
     "verify:smtp": "node --env-file-if-exists=.env scripts/verify-smtp.mjs",
     "test:email": "node --env-file-if-exists=.env scripts/send-test-inquiry.mjs",
     "test:phase2": "node scripts/phase2-validate.mjs",
-    "test": "node --test --test-concurrency=1 --import ./test/setup.mjs ./test/auth.test.js ./test/projects.test.js ./test/cms.test.js ./test/inquiries.test.js ./test/ops.test.js ./test/config.test.js",
+    "test": "node --test --test-concurrency=1 --import ./test/setup.mjs ./test/auth.test.js ./test/projects.test.js ./test/cms.test.js ./test/inquiries.test.js ./test/ops.test.js ./test/config.test.js ./test/hardening.test.js ./test/admin-secret.test.js ./test/deploy.test.js ./test/backup-restore.test.js ./test/release-gate.test.js",
+    "restore:db": "node --env-file-if-exists=.env scripts/restore-db.mjs",
+    "audit:env": "node --env-file-if-exists=.env scripts/audit-env.mjs",
     "backup": "node --env-file-if-exists=.env scripts/backup-db.mjs",
     "verify:env": "node --env-file-if-exists=.env scripts/verify-env.mjs",
     "verify:db": "node --env-file-if-exists=.env scripts/verify-db.mjs",
+    "render:admin-nginx": "node --env-file-if-exists=.env scripts/render-admin-nginx.mjs",
     "smoke": "node scripts/smoke.mjs"
   },
   "dependencies": {
@@ -25,9 +28,12 @@
     "cors": "^2.8.5",
     "express": "^5.1.0",
     "jsonwebtoken": "^9.0.2",
-    "multer": "^2.0.2",
+    "multer": "^2.4.0",
     "mysql2": "^3.24.2",
-    "nodemailer": "^7.0.6"
+    "nodemailer": "^9.1.1"
+  },
+  "overrides": {
+    "qs": "6.16.0"
   },
   "allowScripts": {
     "better-sqlite3@12.11.1": true

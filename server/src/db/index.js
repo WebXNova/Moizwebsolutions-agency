@@ -6,7 +6,6 @@ import { logger } from '../lib/logger.js';
 import { initializeSchema } from './schema.js';
 import { seedDatabase } from './seed.js';
 import { seedCmsContent } from '../cms/seed.js';
-import { createMysqlDatabase } from './mysql.js';
 
 let db;
 
@@ -27,15 +26,11 @@ function openSqlite() {
 export function getDb() {
   if (!db) {
     if (env.db.host) {
-      db = createMysqlDatabase(env.db);
-      logger.info('db.mysql_connected', {
-        host: env.db.host,
-        port: env.db.port,
-        database: env.db.name,
+      logger.warn('db.mysql_ignored', {
+        detail: 'DB_HOST is set but MySQL is not a supported runtime. Using SQLite. Unset DB_HOST.',
       });
-    } else {
-      db = openSqlite();
     }
+    db = openSqlite();
     initializeSchema(db);
     seedDatabase(db);
     seedCmsContent(db);

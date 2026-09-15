@@ -1,6 +1,9 @@
 [Unit]
 Description=Moiz Web Solutions API
-After=network.target
+After=network-online.target
+Wants=network-online.target
+StartLimitIntervalSec=60
+StartLimitBurst=5
 
 [Service]
 Type=simple
@@ -9,16 +12,24 @@ Group=mws
 WorkingDirectory=/var/www/mws/server
 Environment=NODE_ENV=production
 EnvironmentFile=-/var/www/mws/server/.env
-ExecStart=/usr/bin/node src/index.js
+UMask=0077
+ExecStartPre=+/usr/bin/install -d -o mws -g mws -m 0750 /var/www/mws/server/data /var/www/mws/server/uploads /var/www/mws/server/backups
+# NODE_ENV on the command line wins over EnvironmentFile so .env cannot drop production mode.
+ExecStart=/usr/bin/env NODE_ENV=production /usr/bin/node src/index.js
 Restart=on-failure
 RestartSec=5
 TimeoutStopSec=15
+KillSignal=SIGTERM
 NoNewPrivileges=true
 PrivateTmp=true
 ProtectSystem=full
 ProtectHome=true
+ProtectKernelTunables=true
+ProtectControlGroups=true
+RestrictSUIDSGID=true
+LockPersonality=true
+RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6
 ReadWritePaths=/var/www/mws/server/data /var/www/mws/server/uploads /var/www/mws/server/backups
-# stdout/stderr go to the journal; rotate with journald (see deploy docs).
 StandardOutput=journal
 StandardError=journal
 SyslogIdentifier=mws-api

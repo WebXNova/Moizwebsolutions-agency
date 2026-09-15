@@ -1,3 +1,4 @@
+import { isDangerousUrl } from '../lib/safeUrl.js';
 import {
   budgetRanges,
   currencies,
@@ -76,6 +77,12 @@ export function normalizeInquiry(body) {
   const phone = cleanSingleLine(input.phone, LIMITS.phone);
   const website = cleanSingleLine(input.website, LIMITS.website);
   const social = cleanSingleLine(input.social, LIMITS.social);
+  if (website && isDangerousUrl(website)) {
+    errors.website = 'Enter a normal website address, not a script or data URL.';
+  }
+  if (social && isDangerousUrl(social)) {
+    errors.social = 'Enter a normal profile link, not a script or data URL.';
+  }
 
   const rawServices = Array.isArray(input.services) ? input.services : [];
   const serviceIds = [...new Set(rawServices.filter((id) => typeof id === 'string'))].slice(

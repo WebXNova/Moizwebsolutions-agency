@@ -30,7 +30,7 @@ Copy `server/.env.example` to `server/.env` on the server. `.env` is gitignored.
 
 | Class | Variables |
 |---|---|
-| SECURITY | `JWT_SECRET`, `JWT_EXPIRES_IN`, `ADMIN_EMAIL`, `ADMIN_PASSWORD` (first-run seed only) |
+| SECURITY | `JWT_SECRET`, `JWT_EXPIRES_IN` (default 12h, max 24h in production), `ADMIN_EMAIL`, `ADMIN_PASSWORD` (first-run seed only), `ADMIN_SECRET_PATH` (required in production; secret admin URL prefix) |
 | DATABASE | `DB_PATH` |
 | SERVER | `NODE_ENV`, `PORT`, `LISTEN_HOST`, `TRUST_PROXY` |
 | CORS | `ALLOWED_ORIGINS` |
@@ -39,7 +39,7 @@ Copy `server/.env.example` to `server/.env` on the server. `.env` is gitignored.
 | BACKUP | `BACKUP_DIR`, `BACKUP_KEEP` |
 | OPTIONAL | `SITE_URL`, `MAIL_TIMEZONE`, rate-limit windows |
 
-Production refuses to start if `JWT_SECRET` is missing/weak, `ALLOWED_ORIGINS` is empty or invalid, `PORT`/`TRUST_PROXY` are nonsense, or `DB_PATH` sits under uploads/backups/`client/dist`. Missing SMTP does **not** block startup: inquiries still persist with `email_status=failed`.
+Production refuses to start if `JWT_SECRET` is missing/weak, `ADMIN_SECRET_PATH` is missing/guessable, `ALLOWED_ORIGINS` is empty or invalid, `PORT`/`TRUST_PROXY` are nonsense, or `DB_PATH` sits under uploads/backups/`client/dist`. Missing SMTP does **not** block startup: inquiries still persist with `email_status=failed`.
 
 `TRUST_PROXY=1` when Nginx is in front (so rate limits see the real client IP). Leave `0` if Node is reached directly.
 
@@ -68,7 +68,27 @@ sudo mkdir -p /var/www/mws
 sudo chown -R mws:mws /var/www/mws
 ```
 
-Minimum permissions: `mws` read the app; write `data/`, `uploads/`, `backups/`; `.env` owner-read only (`chmod 600`).
+Minimum permissions (least privilege; do not run Node as root):
+
+| Path | Owner | Mode | Why |
+|---|---|---|---|
+| `/var/www/mws/server/.env` | `mws:mws` | `600` | Secrets; not world-readable |
+| `/var/www/mws/server/data/` | `mws:mws` | `750` | SQLite + WAL/SHM |
+| `/var/www/mws/server/uploads/` | `mws:mws` | `750` | Writable media |
+| `/var/www/mws/server/backups/` | `mws:mws` | `750` | Not web-rooted |
+| App source / `client/dist` | `mws:mws` | `755` dirs / `644` files | Readable, not writable by the service except the paths above |
+| `/etc/systemd/system/mws-api.service` | `root:root` | `644` | systemd unit |
+| Nginx vhost | `root:root` | `644` | Must not contain `ADMIN_SECRET_PATH` |
+
+```bash
+sudo chmod 600 /var/www/mws/server/.env
+sudo chown mws:mws /var/www/mws/server/.env
+sudo chmod 750 /var/www/mws/server/data /var/www/mws/server/uploads /var/www/mws/server/backups
+```
+
+The API unit uses `ProtectSystem=full` and `ReadWritePaths` limited to `data/`, `uploads/`, and `backups/`. Create those directories (the unit `ExecStartPre` also creates them as root, then drops to `mws`).
+
+`NODE_ENV=production npm run audit:env` reports YES/NO for secrets and never prints values. `NODE_ENV=production npm run verify:env` fails closed if production config is invalid. `npm run verify:db` runs `PRAGMA integrity_check` (read-only).
 
 ## Database initialization
 
@@ -97,12 +117,22 @@ Use **systemd** only (not PM2 and systemd together).
 1. Copy `deploy/systemd/mws-api.service` to `/etc/systemd/system/`
 2. Edit `WorkingDirectory` / `ReadWritePaths` if your paths differ
 3. `sudo systemctl daemon-reload && sudo systemctl enable --now mws-api`
+4. `systemctl is-enabled mws-api` must be `enabled` so the API returns after reboot
+5. `systemctl status mws-api` — active (running), user `mws`, not root
 
-The unit restarts on crash and at boot, logs to the journal (`journalctl -u mws-api -f`), and stops with SIGTERM (the app closes the HTTP server, then SQLite, with a 10s timeout).
+Safe restart: `sudo systemctl restart mws-api` then `curl -fsS http://127.0.0.1:8787/api/health/live`. Do not `kill -9` the process in production.
+
+The unit restarts on crash (`Restart=on-failure`, burst-limited), logs to the journal (`journalctl -u mws-api -f`), and stops with SIGTERM (the app closes the HTTP server, then SQLite, with a 15s systemd stop timeout).
 
 ## Reverse proxy and HTTPS
 
-Copy `deploy/nginx/moizwebsolutions.conf`, set the real hostname, install certificates, reload Nginx. HTTP redirects to HTTPS. Node is not published on `:8787` to the internet.
+Copy `deploy/nginx/moizwebsolutions.conf`, set the real hostname, install certificates, then **`sudo nginx -t`**. Reload only if that succeeds: `sudo systemctl reload nginx`. HTTP redirects to HTTPS except `/.well-known/acme-challenge/`. Node is not published on `:8787` to the internet.
+
+`sudo systemctl enable nginx` so HTTPS returns after reboot.
+
+The admin login page is no longer served from `/admin/login`. Operators open `/{ADMIN_SECRET_PATH}/login` (and other admin pages under that same prefix). Direct `/admin` requests 404. APIs still require JWT.
+
+The sample Nginx vhost proxies unknown paths to Node (`@node`). `ADMIN_SECRET_PATH` stays in `server/.env` and is not written into the vhost. Rotating it requires restarting the API (`systemctl restart mws-api`). Nginx reload is not required unless you also generated an optional explicit snippet with `npm run render:admin-nginx`.
 
 Compression and TLS live in Nginx, not Express.
 
@@ -128,7 +158,7 @@ sudo cp deploy/systemd/mws-backup.service deploy/systemd/mws-backup.timer /etc/s
 sudo systemctl enable --now mws-backup.timer
 ```
 
-Copy snapshots off-box (encrypted disk, `restic`, Borg, or your host’s snapshot product). Do not invent application-level cryptography. Do not store backups under `uploads/` or `client/dist/`.
+Copy snapshots off-box by setting `BACKUP_OFFSITE_DIR` to a mount that is **not** the VPS boot disk (rclone, sshfs, USB). `BACKUP_PASSPHRASE` encrypts the `.tar.gz` before that copy. See **[DR.md](./DR.md)**.
 
 **Limitation:** SQLite backup is consistent; media is a near-simultaneous filesystem copy, not a two-phase commit.
 

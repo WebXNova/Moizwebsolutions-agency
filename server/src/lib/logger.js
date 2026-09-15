@@ -8,9 +8,16 @@ import { env } from '../config/env.js';
  * delivery problem back to an inquiry id.
  */
 
-function redactSecrets(value) {
+export function redactSecrets(value) {
   let text = String(value ?? '');
-  for (const secret of [env.smtp.pass, env.smtp.user, env.jwt.secret, env.admin.password]) {
+  for (const secret of [
+    env.smtp.pass,
+    env.smtp.user,
+    env.jwt.secret,
+    env.admin.password,
+    env.adminSecret.path,
+    env.backup.passphrase,
+  ]) {
     if (secret && secret.length >= 3) text = text.split(secret).join('[redacted]');
   }
   return text;
@@ -29,7 +36,7 @@ function write(level, message, fields) {
     ...fields,
   };
 
-  const line = JSON.stringify(entry);
+  const line = redactSecrets(JSON.stringify(entry));
   if (level === 'error') console.error(line);
   else if (level === 'warn') console.warn(line);
   else console.log(line);

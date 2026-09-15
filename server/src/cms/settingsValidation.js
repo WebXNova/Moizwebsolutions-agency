@@ -1,5 +1,12 @@
 import { defaultSiteSettings } from './defaults.js';
-import { asBool, asOptionalUrl, asString, isValidUrl } from '../lib/validators.js';
+import { asBool, asString, isValidUrl } from '../lib/validators.js';
+import { isSafeAssetUrl, isSafeHref } from '../lib/safeUrl.js';
+
+function isDangerousOrInvalidEmbed(value) {
+  if (!value) return false;
+  if (/^https:\/\/(www\.)?(youtube\.com|youtu\.be)\//i.test(value)) return false;
+  return !isValidUrl(value);
+}
 
 export const ALLOWED_SETTING_KEYS = Object.freeze([
   'hero',
@@ -26,12 +33,17 @@ function str(value, max = 2000) {
 /**
  * @param {unknown} value
  */
-function cta(value) {
+function cta(value, errors, fieldName = 'CTA') {
   const source = isPlainObject(value) ? value : {};
-  const url = asOptionalUrl(source.url);
+  const raw = asString(source.url);
+  let url = '';
+  if (raw) {
+    if (isSafeHref(raw)) url = raw;
+    else if (errors) errors.push(`${fieldName} URL is invalid.`);
+  }
   return {
     label: str(source.label, 120),
-    url: url === null ? '' : url,
+    url,
   };
 }
 
@@ -73,23 +85,28 @@ function validateHero(body) {
 
   const video = isPlainObject(source.video) ? source.video : {};
   const embedUrl = asString(video.embedUrl);
-  if (embedUrl && !/^https:\/\/(www\.)?(youtube\.com|youtu\.be)\//i.test(embedUrl) && !isValidUrl(embedUrl)) {
+  if (embedUrl && isDangerousOrInvalidEmbed(embedUrl)) {
     errors.push('Hero video URL is invalid.');
+  }
+
+  const imageUrl = str(source.imageUrl, 500);
+  if (imageUrl && !isSafeAssetUrl(imageUrl)) {
+    errors.push('Hero image URL is invalid.');
   }
 
   const stat = isPlainObject(source.stat) ? source.stat : {};
   const data = {
     titleLines,
     paragraph: str(source.paragraph, 4000),
-    cta: cta(source.cta),
-    secondaryCta: cta(source.secondaryCta ?? CTA_SHAPE),
+    cta: cta(source.cta, errors, 'Hero CTA'),
+    secondaryCta: cta(source.secondaryCta ?? CTA_SHAPE, errors, 'Hero secondary CTA'),
     badge: str(source.badge, 80),
     availability: str(source.availability, 160),
     stat: {
       value: str(stat.value, 24),
       label: str(stat.label, 80),
     },
-    imageUrl: str(source.imageUrl, 500),
+    imageUrl,
     imageAlt: str(source.imageAlt, 200),
     imagePosition: str(source.imagePosition, 40) || 'center',
     visible: asBool(source.visible, true),
@@ -151,15 +168,16 @@ function validateContact(body) {
  * @param {unknown} body
  */
 function validateCta(body) {
+  const errors = [];
   const source = isPlainObject(body) ? body : {};
   return {
-    errors: [],
+    errors,
     data: {
       eyebrow: str(source.eyebrow, 80),
       headline: str(source.headline, 200),
       title: str(source.title, 200),
       subtitle: str(source.subtitle, 1000),
-      cta: cta(source.cta),
+      cta: cta(source.cta, errors, 'CTA'),
       secondaryText: str(source.secondaryText, 200),
       visible: asBool(source.visible, true),
     },
@@ -170,16 +188,21 @@ function validateCta(body) {
  * @param {unknown} body
  */
 function validateHeroCta(body) {
+  const errors = [];
   const source = isPlainObject(body) ? body : {};
+  const backgroundImageUrl = str(source.backgroundImageUrl, 500);
+  if (backgroundImageUrl && !isSafeAssetUrl(backgroundImageUrl)) {
+    errors.push('Background image URL is invalid.');
+  }
   return {
-    errors: [],
+    errors,
     data: {
       heading: str(source.heading, 200),
       description: str(source.description, 1000),
-      primaryCta: cta(source.primaryCta),
-      secondaryCta: cta(source.secondaryCta),
+      primaryCta: cta(source.primaryCta, errors, 'Primary CTA'),
+      secondaryCta: cta(source.secondaryCta, errors, 'Secondary CTA'),
       label: str(source.label, 80),
-      backgroundImageUrl: str(source.backgroundImageUrl, 500),
+      backgroundImageUrl,
       visible: asBool(source.visible, true),
     },
   };
@@ -195,7 +218,7 @@ function validateFooter(body) {
   const quickLinks = links.slice(0, 12).map((link, index) => {
     const item = isPlainObject(link) ? link : {};
     const href = str(item.href, 300);
-    if (href && !href.startsWith('/') && !isValidUrl(href) && !href.startsWith('#')) {
+    if (href && !isSafeHref(href)) {
       errors.push(`Footer quick link ${index + 1} has an invalid href.`);
     }
     return { label: str(item.label, 80), href };
@@ -220,6 +243,9 @@ function validateSeo(body) {
   const source = isPlainObject(body) ? body : {};
   const canonicalUrl = requireValidOptionalUrl(source.canonicalUrl, 'Canonical URL', errors);
   const ogImage = str(source.ogImage, 500);
+  if (ogImage && !isSafeAssetUrl(ogImage)) {
+    errors.push('Open Graph image URL is invalid.');
+  }
   const twitterCard = str(source.twitterCard, 40) || 'summary_large_image';
   if (!['summary', 'summary_large_image'].includes(twitterCard)) {
     errors.push('Twitter card must be summary or summary_large_image.');

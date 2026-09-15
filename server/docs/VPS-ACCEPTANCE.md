@@ -175,7 +175,7 @@ Suggested host layout (must match systemd `ReadWritePaths` if you keep the sampl
 |---|---|
 | **Status** | REQUIRES VPS ACTION |
 | **Repo** | Nginx `root …/client/dist`; SPA `try_files`. Client `npm run build` succeeded locally. |
-| **VPS** | `https://your.domain/` returns the built `index.html`; `/portfolio` and `/admin/login` do not 404 as files. |
+| **VPS** | `https://your.domain/` returns the built `index.html`; `/portfolio` does not 404 as a file. `/admin/login` without the secret-URL gate cookie is 404. |
 | **VPS result** | NOT YET VERIFIED |
 
 ## 18. `/uploads` behavior
@@ -265,7 +265,7 @@ Suggested host layout (must match systemd `ReadWritePaths` if you keep the sampl
 |---|---|
 | **Status** | REQUIRES VPS ACTION |
 | **Repo** | Login API + rate limits tested locally. Smoke login is **optional** env. Production admin must exist (`ADMIN_*` seed or Users UI). |
-| **VPS** | Sign in at `https://your.domain/admin/login` with the real admin (not fixtures). Wrong password stays 401. |
+| **VPS** | Sign in at `https://your.domain/{ADMIN_SECRET_PATH}/login`. Direct `/admin/login` is 404. |
 | **VPS result** | NOT YET VERIFIED |
 
 ## 28. Authenticated admin API

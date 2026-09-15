@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { Home } from '@/pages/Home';
 import { PortfolioPage } from '@/pages/Portfolio';
 import { ContactPage } from '@/pages/Contact';
@@ -25,18 +25,22 @@ import { AdminActivityLogs } from '@/pages/admin/AdminActivityLogs';
 import { AdminInquiries } from '@/pages/admin/AdminInquiries';
 import { AdminUsers } from '@/pages/admin/AdminUsers';
 import { useAppReveal } from '@/hooks/useAppReveal';
+import { getAdminBase } from '@/lib/adminBase';
 
-/** Reveals the HTML boot loader for admin routes (no public CMS wait). */
-function BootRouteGate() {
-  const { pathname } = useLocation();
-  useAppReveal(pathname.startsWith('/admin'));
+function PublicBootGate() {
+  useAppReveal(false);
   return null;
 }
 
-export default function App() {
+function AdminBootGate() {
+  useAppReveal(true);
+  return null;
+}
+
+function PublicRoutes() {
   return (
     <BrowserRouter>
-      <BootRouteGate />
+      <PublicBootGate />
       <Routes>
         <Route element={<PublicLayout />}>
           <Route path="/" element={<Home />} />
@@ -46,9 +50,19 @@ export default function App() {
           <Route path="/terms" element={<LegalPage slug="terms" />} />
           <Route path="/refund" element={<LegalPage slug="refund" />} />
         </Route>
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
+    </BrowserRouter>
+  );
+}
 
-        <Route path="/admin/login" element={<AdminLogin />} />
-        <Route path="/admin" element={<AdminLayout />}>
+function AdminRoutes({ basename }) {
+  return (
+    <BrowserRouter basename={basename}>
+      <AdminBootGate />
+      <Routes>
+        <Route path="/login" element={<AdminLogin />} />
+        <Route path="/" element={<AdminLayout />}>
           <Route index element={<Navigate to="dashboard" replace />} />
           <Route path="dashboard" element={<AdminDashboard />} />
           <Route path="projects" element={<AdminProjects />} />
@@ -69,9 +83,14 @@ export default function App() {
           <Route path="activity-logs" element={<AdminActivityLogs />} />
           <Route path="users" element={<AdminUsers />} />
         </Route>
-
-        <Route path="*" element={<Navigate to="/" replace />} />
+        <Route path="*" element={<Navigate to="/login" replace />} />
       </Routes>
     </BrowserRouter>
   );
+}
+
+export default function App() {
+  const basename = getAdminBase();
+  if (basename) return <AdminRoutes basename={basename} />;
+  return <PublicRoutes />;
 }

@@ -1,6 +1,6 @@
 # Operations
 
-Canonical production procedure: **[DEPLOY.md](./DEPLOY.md)** (VPS + Nginx + systemd, backup/restore, rollback, DR).
+Canonical production procedure: **[DEPLOY.md](./DEPLOY.md)** (VPS + Nginx + systemd). Backup/restore: **[DR.md](./DR.md)**.
 
 Real-VPS go-live ticks: **[VPS-ACCEPTANCE.md](./VPS-ACCEPTANCE.md)** (45-point checklist). Sample configs in git are not a pass.
 
@@ -23,7 +23,13 @@ SQLite uses WAL, foreign keys, and `busy_timeout=5000`. One Node writer.
 
 ## Rate limits
 
-In-memory, single instance: inquiry POST and admin login. Not shared across processes.
+In-memory, single instance: public inquiry POST, admin login, media uploads, and inquiry email resend. Not shared across processes. Exceeded limits return HTTP 429.
+
+## Database
+
+SQLite is the supported runtime. `DB_HOST` is ignored; production refuses to start if it is set so MySQL cannot be activated accidentally. The previous MySQL adapter blocked the event loop and has been removed.
+
+Admin sessions are stored in `admin_sessions`. `POST /api/admin/auth/logout` revokes the current JWT. Password changes, deactivation, and role changes also revoke that admin's sessions. `JWT_EXPIRES_IN` defaults to 12h (max 24h in production). `ADMIN_SECRET_PATH` is an extra HTML gate for the existing `/admin` SPA; it is not a substitute for JWT authentication. Never log the live path. Rotate it by changing `.env` and restarting the API.
 
 ## Schema initialization
 

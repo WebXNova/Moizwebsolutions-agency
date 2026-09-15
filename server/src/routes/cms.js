@@ -20,6 +20,9 @@ import {
   normalizeEmail,
   normalizeUrl,
 } from '../lib/validators.js';
+import { isSafeHref, isSafeHttpUrl, isSafeRelativePath } from '../lib/safeUrl.js';
+import { validatePassword } from '../lib/passwordPolicy.js';
+import { revokeSessionsForAdmin } from '../lib/sessions.js';
 import {
   formatActivityLog,
   formatMedia,
@@ -92,7 +95,21 @@ function validateDateRange(startValue, endValue) {
 }
 
 function isSafeNavHref(href) {
-  return href.startsWith('/') || href.startsWith('#');
+  return isSafeRelativePath(href);
+}
+
+/**
+ * @param {unknown} value
+ * @param {{ allowRelative?: boolean; allowEmpty?: boolean }} [options]
+ * @returns {{ ok: true; value: string } | { ok: false }}
+ */
+function parseSafeUrlField(value, options = {}) {
+  const raw = asString(value);
+  if (!raw) return options.allowEmpty === false ? { ok: false } : { ok: true, value: '' };
+  if (options.allowRelative) {
+    return isSafeHref(raw) ? { ok: true, value: raw } : { ok: false };
+  }
+  return isSafeHttpUrl(raw) ? { ok: true, value: normalizeUrl(raw) || raw } : { ok: false };
 }
 
 // ─── Settings ───────────────────────────────────────────────────────────────
@@ -156,6 +173,8 @@ cmsRouter.post('/services', (req, res) => {
   if (!SERVICE_ICONS.includes(icon)) {
     return res.status(400).json({ ok: false, message: 'Invalid icon.' });
   }
+  const ctaUrlField = parseSafeUrlField(req.body.ctaUrl, { allowRelative: true });
+  if (!ctaUrlField.ok) return res.status(400).json({ ok: false, message: 'Invalid CTA URL.' });
   const id = randomUUID();
   db.prepare(`
     INSERT INTO services (id, slug, icon, label, title, description, details_json, cta_text, cta_url, category_label, active, featured, display_order)
@@ -167,7 +186,7 @@ cmsRouter.post('/services', (req, res) => {
     asString(req.body.description),
     JSON.stringify(req.body.details || []),
     asString(req.body.ctaText),
-    asString(req.body.ctaUrl),
+    ctaUrlField.value,
     asString(req.body.categoryLabel),
     asBool(req.body.active, true) ? 1 : 0,
     asBool(req.body.featured) ? 1 : 0,
@@ -197,6 +216,11 @@ cmsRouter.put('/services/:id', (req, res) => {
   }
   const title = asString(req.body.title) || existing.title;
   const slug = asString(req.body.slug) || existing.slug;
+  const nextCtaUrl =
+    req.body.ctaUrl !== undefined
+      ? parseSafeUrlField(req.body.ctaUrl, { allowRelative: true })
+      : { ok: true, value: existing.cta_url };
+  if (!nextCtaUrl.ok) return res.status(400).json({ ok: false, message: 'Invalid CTA URL.' });
   db.prepare(`
     UPDATE services SET slug=?, icon=?, label=?, title=?, description=?, details_json=?,
     cta_text=?, cta_url=?, category_label=?, active=?, featured=?, display_order=?,
@@ -208,7 +232,7 @@ cmsRouter.put('/services/:id', (req, res) => {
     req.body.description !== undefined ? asString(req.body.description) : existing.description,
     req.body.details !== undefined ? JSON.stringify(req.body.details) : existing.details_json,
     req.body.ctaText !== undefined ? asString(req.body.ctaText) : existing.cta_text,
-    req.body.ctaUrl !== undefined ? asString(req.body.ctaUrl) : existing.cta_url,
+    nextCtaUrl.value,
     req.body.categoryLabel !== undefined ? asString(req.body.categoryLabel) : existing.category_label,
     req.body.active !== undefined ? (asBool(req.body.active) ? 1 : 0) : existing.active,
     req.body.featured !== undefined ? (asBool(req.body.featured) ? 1 : 0) : existing.featured,
@@ -240,13 +264,15 @@ cmsRouter.post('/testimonials', (req, res) => {
   const quote = asString(req.body.quote);
   const author = asString(req.body.author);
   if (!quote || !author) return res.status(400).json({ ok: false, message: 'Quote and author are required.' });
+  const avatarUrl = parseSafeUrlField(req.body.avatarUrl, { allowRelative: true });
+  if (!avatarUrl.ok) return res.status(400).json({ ok: false, message: 'Invalid avatar URL.' });
   const id = randomUUID();
   getDb().prepare(`
     INSERT INTO testimonials (id, quote, author, role, company, avatar_url, verified, featured, published, display_order)
     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `).run(
     id, quote, author,
-    asString(req.body.role), asString(req.body.company), asString(req.body.avatarUrl),
+    asString(req.body.role), asString(req.body.company), avatarUrl.value,
     asBool(req.body.verified) ? 1 : 0, asBool(req.body.featured) ? 1 : 0,
     asBool(req.body.published, true) ? 1 : 0, asInt(req.body.displayOrder, 0),
   );
@@ -268,6 +294,11 @@ cmsRouter.put('/testimonials/:id', (req, res) => {
   const db = getDb();
   const existing = db.prepare('SELECT * FROM testimonials WHERE id = ?').get(req.params.id);
   if (!existing) return res.status(404).json({ ok: false, message: 'Testimonial not found.' });
+  const nextAvatar =
+    req.body.avatarUrl !== undefined
+      ? parseSafeUrlField(req.body.avatarUrl, { allowRelative: true })
+      : { ok: true, value: existing.avatar_url };
+  if (!nextAvatar.ok) return res.status(400).json({ ok: false, message: 'Invalid avatar URL.' });
   db.prepare(`
     UPDATE testimonials SET quote=?, author=?, role=?, company=?, avatar_url=?,
     verified=?, featured=?, published=?, display_order=?, updated_at=datetime('now') WHERE id=?
@@ -276,7 +307,7 @@ cmsRouter.put('/testimonials/:id', (req, res) => {
     asString(req.body.author) || existing.author,
     req.body.role !== undefined ? asString(req.body.role) : existing.role,
     req.body.company !== undefined ? asString(req.body.company) : existing.company,
-    req.body.avatarUrl !== undefined ? asString(req.body.avatarUrl) : existing.avatar_url,
+    nextAvatar.value,
     req.body.verified !== undefined ? (asBool(req.body.verified) ? 1 : 0) : existing.verified,
     req.body.featured !== undefined ? (asBool(req.body.featured) ? 1 : 0) : existing.featured,
     req.body.published !== undefined ? (asBool(req.body.published) ? 1 : 0) : existing.published,
@@ -308,12 +339,16 @@ cmsRouter.get('/trusted-companies', (_req, res) => {
 cmsRouter.post('/trusted-companies', (req, res) => {
   const name = asString(req.body.name);
   if (!name) return res.status(400).json({ ok: false, message: 'Company name is required.' });
+  const logoUrl = parseSafeUrlField(req.body.logoUrl, { allowRelative: true });
+  const websiteUrl = parseSafeUrlField(req.body.websiteUrl, { allowRelative: false });
+  if (!logoUrl.ok) return res.status(400).json({ ok: false, message: 'Invalid logo URL.' });
+  if (!websiteUrl.ok) return res.status(400).json({ ok: false, message: 'Invalid website URL.' });
   const id = randomUUID();
   getDb().prepare(`
     INSERT INTO trusted_companies (id, name, logo_url, website_url, logo_alt, active, display_order)
     VALUES (?, ?, ?, ?, ?, ?, ?)
   `).run(
-    id, name, asString(req.body.logoUrl), asString(req.body.websiteUrl),
+    id, name, logoUrl.value, websiteUrl.value,
     asString(req.body.logoAlt) || name, asBool(req.body.active, true) ? 1 : 0, asInt(req.body.displayOrder, 0),
   );
   audit(req, 'created_company', 'trusted_company', id, name);
@@ -334,16 +369,18 @@ cmsRouter.put('/trusted-companies/:id', (req, res) => {
   const db = getDb();
   const existing = db.prepare('SELECT * FROM trusted_companies WHERE id = ?').get(req.params.id);
   if (!existing) return res.status(404).json({ ok: false, message: 'Company not found.' });
-  const websiteUrl = req.body.websiteUrl !== undefined ? asString(req.body.websiteUrl) : existing.website_url;
-  if (websiteUrl && !isValidUrl(websiteUrl)) {
+  const websiteUrl = req.body.websiteUrl !== undefined ? parseSafeUrlField(req.body.websiteUrl, { allowRelative: false }) : { ok: true, value: existing.website_url };
+  if (!websiteUrl.ok) {
     return res.status(400).json({ ok: false, message: 'Invalid website URL.' });
   }
+  const logoUrl = req.body.logoUrl !== undefined ? parseSafeUrlField(req.body.logoUrl, { allowRelative: true }) : { ok: true, value: existing.logo_url };
+  if (!logoUrl.ok) return res.status(400).json({ ok: false, message: 'Invalid logo URL.' });
   db.prepare(`
     UPDATE trusted_companies SET name=?, logo_url=?, website_url=?, logo_alt=?, active=?, display_order=?, updated_at=datetime('now') WHERE id=?
   `).run(
     asString(req.body.name) || existing.name,
-    req.body.logoUrl !== undefined ? asString(req.body.logoUrl) : existing.logo_url,
-    websiteUrl, req.body.logoAlt !== undefined ? asString(req.body.logoAlt) : existing.logo_alt,
+    logoUrl.value,
+    websiteUrl.value, req.body.logoAlt !== undefined ? asString(req.body.logoAlt) : existing.logo_alt,
     req.body.active !== undefined ? (asBool(req.body.active) ? 1 : 0) : existing.active,
     req.body.displayOrder !== undefined ? asInt(req.body.displayOrder, existing.display_order) : existing.display_order,
     req.params.id,
@@ -374,12 +411,14 @@ cmsRouter.post('/technologies', (req, res) => {
   const name = asString(req.body.name);
   if (!name) return res.status(400).json({ ok: false, message: 'Name is required.' });
   const slug = asString(req.body.slug) || slugify(name);
+  const logoUrl = parseSafeUrlField(req.body.logoUrl, { allowRelative: true });
+  if (!logoUrl.ok) return res.status(400).json({ ok: false, message: 'Invalid logo URL.' });
   const id = randomUUID();
   getDb().prepare(`
     INSERT INTO technologies (id, slug, name, category, logo_url, color, invert_on_dark, active, featured, display_order)
     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `).run(
-    id, slug, name, asString(req.body.category), asString(req.body.logoUrl),
+    id, slug, name, asString(req.body.category), logoUrl.value,
     asString(req.body.color), asBool(req.body.invertOnDark) ? 1 : 0,
     asBool(req.body.active, true) ? 1 : 0, asBool(req.body.featured) ? 1 : 0, asInt(req.body.displayOrder, 0),
   );
@@ -401,6 +440,11 @@ cmsRouter.put('/technologies/:id', (req, res) => {
   const db = getDb();
   const existing = db.prepare('SELECT * FROM technologies WHERE id = ?').get(req.params.id);
   if (!existing) return res.status(404).json({ ok: false, message: 'Technology not found.' });
+  const nextLogo =
+    req.body.logoUrl !== undefined
+      ? parseSafeUrlField(req.body.logoUrl, { allowRelative: true })
+      : { ok: true, value: existing.logo_url };
+  if (!nextLogo.ok) return res.status(400).json({ ok: false, message: 'Invalid logo URL.' });
   db.prepare(`
     UPDATE technologies SET slug=?, name=?, category=?, logo_url=?, color=?, invert_on_dark=?,
     active=?, featured=?, display_order=?, updated_at=datetime('now') WHERE id=?
@@ -408,7 +452,7 @@ cmsRouter.put('/technologies/:id', (req, res) => {
     req.body.slug !== undefined ? asString(req.body.slug) : existing.slug,
     asString(req.body.name) || existing.name,
     req.body.category !== undefined ? asString(req.body.category) : existing.category,
-    req.body.logoUrl !== undefined ? asString(req.body.logoUrl) : existing.logo_url,
+    nextLogo.value,
     req.body.color !== undefined ? asString(req.body.color) : existing.color,
     req.body.invertOnDark !== undefined ? (asBool(req.body.invertOnDark) ? 1 : 0) : existing.invert_on_dark,
     req.body.active !== undefined ? (asBool(req.body.active) ? 1 : 0) : existing.active,
@@ -507,8 +551,10 @@ cmsRouter.get('/updates', (_req, res) => {
 cmsRouter.post('/updates', (req, res) => {
   const title = asString(req.body.title);
   if (!title) return res.status(400).json({ ok: false, message: 'Title is required.' });
-  const ctaUrl = asString(req.body.ctaUrl);
-  if (ctaUrl && !isValidUrl(ctaUrl)) return res.status(400).json({ ok: false, message: 'Invalid CTA URL.' });
+  const ctaUrlField = parseSafeUrlField(req.body.ctaUrl, { allowRelative: true });
+  if (!ctaUrlField.ok) return res.status(400).json({ ok: false, message: 'Invalid CTA URL.' });
+  const imageUrlField = parseSafeUrlField(req.body.imageUrl, { allowRelative: true });
+  if (!imageUrlField.ok) return res.status(400).json({ ok: false, message: 'Invalid image URL.' });
   const dates = validateDateRange(req.body.startDate, req.body.endDate);
   if (dates.error) return res.status(400).json({ ok: false, message: dates.error });
   const id = randomUUID();
@@ -517,8 +563,8 @@ cmsRouter.post('/updates', (req, res) => {
     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `).run(
     id, title, asString(req.body.shortDescription), asString(req.body.fullDescription),
-    asString(req.body.imageUrl), asString(req.body.category) || 'announcement',
-    asString(req.body.ctaText), ctaUrl ? normalizeUrl(ctaUrl) : '',
+    imageUrlField.value, asString(req.body.category) || 'announcement',
+    asString(req.body.ctaText), ctaUrlField.value,
     asBool(req.body.published) ? 1 : 0, asBool(req.body.featured) ? 1 : 0,
     dates.startDate, dates.endDate, asInt(req.body.displayOrder, 0),
   );
@@ -531,8 +577,10 @@ cmsRouter.put('/updates/:id', (req, res) => {
   const db = getDb();
   const existing = db.prepare('SELECT * FROM website_updates WHERE id = ?').get(req.params.id);
   if (!existing) return res.status(404).json({ ok: false, message: 'Update not found.' });
-  const ctaUrl = req.body.ctaUrl !== undefined ? asString(req.body.ctaUrl) : existing.cta_url;
-  if (ctaUrl && !isValidUrl(ctaUrl)) return res.status(400).json({ ok: false, message: 'Invalid CTA URL.' });
+  const ctaUrl = req.body.ctaUrl !== undefined ? parseSafeUrlField(req.body.ctaUrl, { allowRelative: true }) : { ok: true, value: existing.cta_url };
+  if (!ctaUrl.ok) return res.status(400).json({ ok: false, message: 'Invalid CTA URL.' });
+  const imageUrl = req.body.imageUrl !== undefined ? parseSafeUrlField(req.body.imageUrl, { allowRelative: true }) : { ok: true, value: existing.image_url };
+  if (!imageUrl.ok) return res.status(400).json({ ok: false, message: 'Invalid image URL.' });
   const nextStart = req.body.startDate !== undefined ? req.body.startDate : existing.start_date;
   const nextEnd = req.body.endDate !== undefined ? req.body.endDate : existing.end_date;
   const dates = validateDateRange(nextStart, nextEnd);
@@ -544,10 +592,10 @@ cmsRouter.put('/updates/:id', (req, res) => {
     asString(req.body.title) || existing.title,
     req.body.shortDescription !== undefined ? asString(req.body.shortDescription) : existing.short_description,
     req.body.fullDescription !== undefined ? asString(req.body.fullDescription) : existing.full_description,
-    req.body.imageUrl !== undefined ? asString(req.body.imageUrl) : existing.image_url,
+    imageUrl.value,
     req.body.category !== undefined ? asString(req.body.category) : existing.category,
     req.body.ctaText !== undefined ? asString(req.body.ctaText) : existing.cta_text,
-    ctaUrl ? normalizeUrl(ctaUrl) : '',
+    ctaUrl.value,
     req.body.published !== undefined ? (asBool(req.body.published) ? 1 : 0) : existing.published,
     req.body.featured !== undefined ? (asBool(req.body.featured) ? 1 : 0) : existing.featured,
     dates.startDate,
@@ -786,7 +834,8 @@ cmsRouter.post('/users', requireUserAdmin, (req, res) => {
   const password = asString(req.body.password);
   if (!email || !password) return res.status(400).json({ ok: false, message: 'Email and password required.' });
   if (!isValidEmail(email)) return res.status(400).json({ ok: false, message: 'Enter a valid email address.' });
-  if (password.length < 8) return res.status(400).json({ ok: false, message: 'Password must be at least 8 characters.' });
+  const passwordError = validatePassword(password, { email });
+  if (passwordError) return res.status(400).json({ ok: false, message: passwordError });
   const role = asString(req.body.role) || 'content_manager';
   if (!ADMIN_ROLES.includes(role)) {
     return res.status(400).json({ ok: false, message: 'Invalid role.' });
@@ -811,7 +860,8 @@ cmsRouter.put('/users/:id', requireUserAdmin, (req, res) => {
   if (!existing) return res.status(404).json({ ok: false, message: 'User not found.' });
   const password = asString(req.body.password);
   if (password) {
-    if (password.length < 8) return res.status(400).json({ ok: false, message: 'Password must be at least 8 characters.' });
+    const passwordError = validatePassword(password, { email: existing.email });
+    if (passwordError) return res.status(400).json({ ok: false, message: passwordError });
   }
   const nextRole = req.body.role !== undefined ? asString(req.body.role) : existing.role;
   if (!ADMIN_ROLES.includes(nextRole)) {
@@ -854,6 +904,9 @@ cmsRouter.put('/users/:id', requireUserAdmin, (req, res) => {
     ).run(nextName, nextRole, nextActive, req.params.id);
   });
   applyUpdate();
+  if (password || nextActive === 0 || nextRole !== existing.role) {
+    revokeSessionsForAdmin(req.params.id);
+  }
   audit(req, 'updated_user', 'admin_user', req.params.id);
   return res.json({ ok: true });
 });

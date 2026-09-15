@@ -13,10 +13,12 @@ import { contentRouter } from './routes/content.js';
 import { cmsRouter } from './routes/cms.js';
 import { inquiriesRouter } from './routes/inquiries.js';
 import { getDb } from './db/index.js';
-import { logger } from './lib/logger.js';
+import { describeError, logger } from './lib/logger.js';
 import { translateDbError } from './lib/dbErrors.js';
 import { requestId } from './middleware/requestId.js';
 import { securityHeaders } from './middleware/securityHeaders.js';
+import { sendPublicSpaPage } from './lib/adminSecret.js';
+import { attachAdminPortalGate } from './middleware/adminPortalGate.js';
 
 export function createApp() {
   const app = express();
@@ -47,6 +49,14 @@ export function createApp() {
       dotfiles: 'deny',
       index: false,
       redirect: false,
+      setHeaders(response, filePath) {
+        const lower = filePath.toLowerCase();
+        if (lower.endsWith('.svg') || lower.endsWith('.html') || lower.endsWith('.js')) {
+          response.setHeader('Content-Type', 'text/plain; charset=utf-8');
+          response.setHeader('Content-Disposition', 'attachment');
+          response.setHeader('X-Content-Type-Options', 'nosniff');
+        }
+      },
     }),
   );
 
@@ -92,6 +102,17 @@ export function createApp() {
   app.use('/api/admin/inquiries', inquiriesRouter);
   app.use('/api/admin', adminRouter);
 
+  attachAdminPortalGate(app);
+
+  app.use((req, res, next) => {
+    if (req.method !== 'GET' && req.method !== 'HEAD') return next();
+    const pathname = req.path || '';
+    if (pathname === '/api' || pathname.startsWith('/api/')) return next();
+    if (pathname === '/uploads' || pathname.startsWith('/uploads/')) return next();
+    if (sendPublicSpaPage(req, res)) return;
+    return next();
+  });
+
   app.use((_req, res) => {
     res.status(404).json({ ok: false, code: 'not_found', message: 'Not found.' });
   });
@@ -110,7 +131,7 @@ export function createApp() {
     if (status >= 500) {
       logger.error('request.unhandled_error', {
         requestId: _req.requestId,
-        message: error?.message,
+        error: describeError(error),
       });
     }
     res.status(status >= 400 && status < 600 ? status : 500).json({

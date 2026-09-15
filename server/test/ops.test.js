@@ -30,7 +30,8 @@ test('liveness does not depend on database internals', async () => {
 test('responses include security headers and a request id', async () => {
   const response = await fetch(`${base}/api/health/live`);
   assert.equal(response.headers.get('x-content-type-options'), 'nosniff');
-  assert.equal(response.headers.get('x-frame-options'), 'SAMEORIGIN');
+  assert.equal(response.headers.get('x-frame-options'), 'DENY');
+  assert.equal(response.headers.get('content-security-policy'), "frame-ancestors 'none'");
   assert.ok(response.headers.get('x-request-id'));
 });
 

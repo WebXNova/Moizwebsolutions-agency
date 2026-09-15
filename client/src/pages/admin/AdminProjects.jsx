@@ -118,7 +118,7 @@ export function AdminProjects() {
             </select>
           </div>
           <Link
-            to="/admin/projects/new"
+            to="/projects/new"
             className="rounded-lg bg-brand-yellow px-5 py-2.5 text-[12px] font-semibold uppercase tracking-[0.12em] text-brand-ink hover:bg-brand-yellow-deep"
           >
             Add Project
@@ -132,7 +132,7 @@ export function AdminProjects() {
         ) : filtered.length === 0 ? (
           <p className="text-[13px] text-muted-foreground">
             No projects yet.{' '}
-            <Link to="/admin/projects/new" className="underline">Add Project</Link>
+            <Link to="/projects/new" className="underline">Add Project</Link>
           </p>
         ) : (
           <div className="space-y-4">
@@ -182,7 +182,7 @@ export function AdminProjects() {
                       {project.featured ? 'Featured' : 'Feature'}
                     </button>
                     <Link
-                      to={`/admin/projects/${project.id}/edit`}
+                      to={`/projects/${project.id}/edit`}
                       aria-label={`Edit ${project.title}`}
                       className="flex h-9 w-9 items-center justify-center rounded-lg border border-border-subtle text-muted-foreground hover:text-foreground"
                     >

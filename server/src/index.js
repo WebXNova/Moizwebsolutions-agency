@@ -3,6 +3,7 @@ import { env } from './config/env.js';
 import { collectStartupProblems, ensureRuntimeDirectories } from './config/validate.js';
 import { closeDb, getDb } from './db/index.js';
 import { describeError, logger } from './lib/logger.js';
+import { installProcessGuards } from './lib/processGuards.js';
 
 const startupProblems = collectStartupProblems();
 if (startupProblems.length > 0) {
@@ -45,7 +46,8 @@ const listenCallback = () => {
     listenHost: env.listenHost || 'all-interfaces',
     nodeEnv: env.nodeEnv,
     allowedOrigins: env.allowedOrigins,
-    detail: 'Inquiry emails are off; review new leads in the admin portal.',
+    adminSecretConfigured: Boolean(env.adminSecret.path),
+    detail: 'Inquiry emails use the configured SMTP transport after the lead is stored.',
   });
 };
 
@@ -87,3 +89,5 @@ function shutdown(signal) {
 for (const signal of ['SIGINT', 'SIGTERM']) {
   process.on(signal, () => shutdown(signal));
 }
+
+installProcessGuards({ shutdown });

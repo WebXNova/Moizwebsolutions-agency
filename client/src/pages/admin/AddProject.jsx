@@ -8,7 +8,7 @@ export function AddProject() {
 
   const handleSubmit = async (data) => {
     await projectService.createProject(data);
-    navigate('/admin/projects');
+    navigate('/projects');
   };
 
   return (

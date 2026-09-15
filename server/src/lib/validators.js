@@ -1,5 +1,4 @@
-const URL_PATTERN =
-  /^https?:\/\/(?:www\.)?[-a-zA-Z0-9@:%._+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b(?:[-a-zA-Z0-9()@:%_+.~#?&/=]*)$/;
+import { isSafeHttpUrl } from './safeUrl.js';
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -12,14 +11,7 @@ const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/;
  * @param {string} value
  */
 export function isValidUrl(value) {
-  if (!value || typeof value !== 'string') return false;
-  try {
-    const url = new URL(value.trim());
-    if (!['http:', 'https:'].includes(url.protocol)) return false;
-    return URL_PATTERN.test(value.trim());
-  } catch {
-    return false;
-  }
+  return isSafeHttpUrl(value);
 }
 
 /**

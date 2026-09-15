@@ -30,6 +30,34 @@ export async function api(base, pathname, options = {}) {
   return { status: response.status, payload };
 }
 
+export async function http(base, pathname, options = {}) {
+  const response = await fetch(`${base}${pathname}`, {
+    redirect: 'manual',
+    ...options,
+    headers: {
+      ...(options.body && typeof options.body === 'string'
+        ? { 'Content-Type': 'application/json' }
+        : {}),
+      ...options.headers,
+    },
+  });
+  const text = await response.text().catch(() => '');
+  let payload = null;
+  try {
+    payload = JSON.parse(text);
+  } catch {
+    payload = null;
+  }
+  return {
+    status: response.status,
+    headers: response.headers,
+    text,
+    payload,
+    location: response.headers.get('location') || '',
+    setCookie: response.headers.get('set-cookie') || '',
+  };
+}
+
 export async function loginAs(
   base,
   email = process.env.ADMIN_EMAIL,

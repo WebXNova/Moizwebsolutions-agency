@@ -4,9 +4,9 @@ Lightweight reference for the agency CMS. Public JSON uses `{ ok: true, ... }` o
 
 ## Authentication
 
-- `POST /api/admin/auth/login` — email + password. Rate limited per IP and email.
+- `POST /api/admin/auth/login` — email + password. Rate limited per IP and email. Same generic failure for unknown accounts and wrong passwords.
 - `GET /api/admin/auth/me` — current admin.
-- `POST /api/admin/auth/logout` — client discards the token.
+- `POST /api/admin/auth/logout` — revokes the current server session (`jti`) so the access token cannot be reused. Also clears the admin-portal gate cookie. Rate limited.
 
 Roles: `super_admin`, `content_manager`, `editor` (write), `viewer` (read). User administration is `super_admin` only. Inactive accounts cannot sign in.
 

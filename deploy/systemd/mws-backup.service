@@ -9,5 +9,6 @@ Group=mws
 WorkingDirectory=/var/www/mws/server
 Environment=NODE_ENV=production
 EnvironmentFile=-/var/www/mws/server/.env
-ExecStart=/usr/bin/node scripts/backup-db.mjs
+UMask=0077
 Nice=10
+ExecStart=/usr/bin/env NODE_ENV=production /usr/bin/node scripts/backup-db.mjs

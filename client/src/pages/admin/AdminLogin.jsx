@@ -8,7 +8,7 @@ export function AdminLogin() {
   const { login, isAuthenticated, loading } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
-  const from = location.state?.from || '/admin/dashboard';
+  const from = location.state?.from || '/dashboard';
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');

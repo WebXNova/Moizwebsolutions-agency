@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { env } from '../config/env.js';
 import { getDb } from '../db/index.js';
+import { deliverInquiryEmail } from '../inquiry/deliverEmail.js';
 import { createInquiryId, formatSubmittedAt } from '../inquiry/inquiryId.js';
 import { normalizeInquiry } from '../inquiry/normalizeInquiry.js';
 import { insertInquiry } from '../inquiry/store.js';
@@ -34,15 +35,15 @@ function persistInquiry(db, inquiry, submittedAt) {
   }
 }
 
-function inquiryResponse({ inquiryId, submittedAt, submittedAtLabel }) {
+function inquiryResponse({ inquiryId, submittedAt, submittedAtLabel, confirmationSent, emailStatus }) {
   return {
     ok: true,
     inquiryId,
     submittedAt: submittedAt.toISOString(),
     submittedAtLabel,
-    confirmationSent: false,
-    emailStatus: 'pending',
-    notificationSent: false,
+    confirmationSent,
+    emailStatus,
+    notificationSent: emailStatus === 'sent',
   };
 }
 
@@ -109,7 +110,14 @@ projectInquiryRouter.post('/project-inquiry', async (req, res) => {
         hasTimeline: Boolean(inquiry.timeline),
       });
 
-      return inquiryResponse({ inquiryId, submittedAt, submittedAtLabel });
+      const delivery = await deliverInquiryEmail(db, inquiry, inquiryId, submittedAtLabel);
+      return inquiryResponse({
+        inquiryId,
+        submittedAt,
+        submittedAtLabel,
+        confirmationSent: delivery.confirmationSent,
+        emailStatus: delivery.emailStatus,
+      });
     })
     .catch((error) => {
       if (error?.status === 500 || error?.message === 'persist_failed') {
